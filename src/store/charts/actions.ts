@@ -5,12 +5,16 @@ import type { ChartData, ChartState } from './types'
 import type { RootState } from '../types'
 import { isEqual } from 'lodash-es'
 
-export const actions: ActionTree<ChartState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
   async reset ({ commit }) {
     commit('setReset')
+  },
+
+  async resetChartStore ({ commit }) {
+    commit('setResetChartStore')
   },
 
   /**
@@ -73,9 +77,9 @@ export const actions: ActionTree<ChartState, RootState> = {
       keys.forEach(key => {
         if (rootState.printer.printer[key]) {
           r[key] = payload[key].temperatures[i]
-          if ('targets' in payload[key]) r[`${key}Target`] = payload[key].targets[i]
-          if ('powers' in payload[key]) r[`${key}Power`] = payload[key].powers[i]
-          if ('speeds' in payload[key]) r[`${key}Speed`] = payload[key].speeds[i]
+          if ('targets' in payload[key]) r[`${key}#target`] = payload[key].targets[i]
+          if ('powers' in payload[key]) r[`${key}#power`] = payload[key].powers[i]
+          if ('speeds' in payload[key]) r[`${key}#speed`] = payload[key].speeds[i]
         }
       })
       d.push(r)
@@ -100,4 +104,4 @@ export const actions: ActionTree<ChartState, RootState> = {
       SocketActions.serverWrite(Globals.MOONRAKER_DB.fluidd.ROOTS.charts.name + '.selectedLegends', payload)
     }
   }
-}
+} satisfies ActionTree<ChartState, RootState>

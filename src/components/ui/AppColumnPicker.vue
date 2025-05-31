@@ -10,10 +10,8 @@
     <template #activator="{ on: menu, attrs }">
       <v-tooltip bottom>
         <template #activator="{ on: tooltip }">
-          <v-btn
-            :disabled="disabled"
-            fab
-            small
+          <app-btn
+            icon
             text
             v-bind="attrs"
             v-on="{ ...tooltip, ...menu }"
@@ -21,52 +19,77 @@
             <v-icon>
               $tableColumn
             </v-icon>
-          </v-btn>
+          </app-btn>
         </template>
         <span>{{ $t('app.general.btn.select_columns') }}</span>
       </v-tooltip>
     </template>
+
     <v-list
       dense
       class="overflow-y-auto"
     >
-      <template v-for="header in headers">
-        <v-list-item
-          v-if="header.text !== '' && header.configurable"
-          :key="header.value"
-          @click="handleToggleHeader(header)"
-        >
-          <v-list-item-action class="my-0">
-            <v-checkbox :input-value="header.visible" />
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>{{ header.text }}</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </template>
+      <app-draggable
+        v-model="configurableHeaders"
+        :options="{
+          group: 'columnPicker',
+        }"
+      >
+        <template v-for="header in configurableHeaders">
+          <v-list-item
+            :key="header.value"
+            @click="handleToggleHeader(header)"
+          >
+            <v-list-item-action class="my-0">
+              <app-drag-icon />
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>{{ header.text }}</v-list-item-title>
+            </v-list-item-content>
+            <v-list-item-action class="my-0">
+              <v-checkbox :input-value="header.visible !== false" />
+            </v-list-item-action>
+          </v-list-item>
+        </template>
+      </app-draggable>
     </v-list>
   </v-menu>
 </template>
 
 <script lang="ts">
-import { Component, Mixins, Prop } from 'vue-property-decorator'
-import StateMixin from '@/mixins/state'
-import type { AppTableHeader } from '@/types'
+import { Component, Vue, Prop } from 'vue-property-decorator'
+import type { AppDataTableHeader } from '@/types'
+import type { ConfiguredTableHeader } from '@/store/config/types'
 
 @Component({})
-export default class AppColumnPicker extends Mixins(StateMixin) {
+export default class AppColumnPicker extends Vue {
   @Prop({ type: String, required: true })
   readonly keyName!: string
 
-  @Prop({ type: Array<AppTableHeader>, required: true })
-  readonly headers!: AppTableHeader[]
+  @Prop({ type: Array, required: true })
+  readonly headers!: AppDataTableHeader[]
 
-  @Prop({ type: Boolean })
-  readonly disabled?: boolean
+  get configurableHeaders (): AppDataTableHeader[] {
+    return this.headers
+  }
 
-  handleToggleHeader (header: AppTableHeader) {
-    header.visible = !header.visible
-    this.$store.dispatch('config/updateHeader', { name: this.keyName, header })
+  set configurableHeaders (value: AppDataTableHeader[]) {
+    const headers = value
+      .map(({ value, visible }): ConfiguredTableHeader => ({
+        value,
+        visible
+      }))
+
+    this.$typedDispatch('config/updateHeaders', { name: this.keyName, headers })
+  }
+
+  handleToggleHeader (value: AppDataTableHeader) {
+    const header : ConfiguredTableHeader = {
+      value: value.value,
+      visible: !(value.visible !== false)
+    }
+
+    this.$typedDispatch('config/updateHeader', { name: this.keyName, header })
   }
 }
 </script>

@@ -76,6 +76,7 @@ import StatusControls from './StatusControls.vue'
 import StatusTab from './StatusTab.vue'
 import ReprintTab from './ReprintTab.vue'
 import type { TimeEstimates } from '@/store/printer/types'
+import getFilePaths from '@/util/get-file-paths'
 
 @Component({
   components: {
@@ -89,25 +90,24 @@ export default class PrinterStatusCard extends Mixins(StateMixin) {
 
   // If the user has no history plugin, and there's no print running..
   // then hide the collapse control.
-  get supportsHistoryComponent () {
-    return this.$store.getters['server/componentSupport']('history')
+  get supportsHistoryComponent (): boolean {
+    return this.$typedGetters['server/componentSupport']('history')
   }
 
   get collapsable () {
-    const filename = this.$store.state.printer.printer.print_stats.filename
     return (
       this.printerPrinting ||
       this.supportsHistoryComponent ||
-      filename !== ''
+      this.filename !== ''
     )
   }
 
-  get filename () {
-    return this.$store.state.printer.printer.print_stats.filename
+  get filename (): string {
+    return this.$typedState.printer.printer.print_stats?.filename ?? ''
   }
 
   get estimates (): TimeEstimates {
-    return this.$store.getters['printer/getTimeEstimates'] as TimeEstimates
+    return this.$typedGetters['printer/getTimeEstimates']
   }
 
   @Watch('filename')
@@ -115,7 +115,7 @@ export default class PrinterStatusCard extends Mixins(StateMixin) {
     this.init(val)
   }
 
-  mounted () {
+  created () {
     this.init(this.filename)
   }
 
@@ -128,10 +128,29 @@ export default class PrinterStatusCard extends Mixins(StateMixin) {
   }
 
   handlePrint (filename: string) {
-    const spoolmanSupported = this.$store.getters['spoolman/getAvailable']
-    const autoSpoolSelectionDialog = this.$store.state.config.uiSettings.spoolman.autoSpoolSelectionDialog
+    if (this.$typedState.printer.printer.mmu?.enabled === true) {
+      const { rootPath, filename: filenameOnly } = getFilePaths(filename, 'gcodes')
+      const fileWithMeta = this.$typedGetters['files/getFile'](rootPath, filenameOnly)
+
+      if (fileWithMeta != null && 'referenced_tools' in fileWithMeta) {
+        const mmuPrint = (fileWithMeta.referenced_tools?.length ?? 1) > 1 || this.$typedState.printer.printer.mmu.gate !== -2
+
+        if (mmuPrint) {
+          this.$typedCommit('mmu/setDialogState', {
+            show: true,
+            filename
+          })
+
+          return
+        }
+      }
+    }
+
+    const spoolmanSupported: boolean = this.$typedGetters['spoolman/getAvailable']
+    const autoSpoolSelectionDialog: boolean = this.$typedState.config.uiSettings.spoolman.autoSpoolSelectionDialog
+
     if (spoolmanSupported && autoSpoolSelectionDialog) {
-      this.$store.commit('spoolman/setDialogState', {
+      this.$typedCommit('spoolman/setDialogState', {
         show: true,
         filename
       })

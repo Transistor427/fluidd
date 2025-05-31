@@ -16,6 +16,7 @@ export const defaultState = (): LayoutState => {
         container1: [
           { id: 'printer-status-card', enabled: true, collapsed: false },
           { id: 'spoolman-card', enabled: true, collapsed: false },
+          { id: 'mmu-card', enabled: true, collapsed: false },
           { id: 'camera-card', enabled: true, collapsed: false },
           { id: 'toolhead-card', enabled: true, collapsed: false },
           { id: 'macros-card', enabled: true, collapsed: false },
@@ -31,7 +32,8 @@ export const defaultState = (): LayoutState => {
           { id: 'jobs-card', enabled: true, collapsed: false },
           { id: 'job-queue-card', enabled: false, collapsed: false },
           { id: 'gcode-preview-card', enabled: true, collapsed: false },
-          { id: 'bed-mesh-card', enabled: false, collapsed: false }
+          { id: 'bed-mesh-card', enabled: false, collapsed: false },
+          { id: 'beacon-card', enabled: false, collapsed: false }
         ]
       },
       diagnostics: {

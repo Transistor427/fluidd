@@ -10,7 +10,7 @@
           v-if="isManualProbeActive"
           :disabled="!klippyReady || printerPrinting"
           small
-          class="ms-1 my-1"
+          class="me-1 my-1"
           @click="manualProbeDialogOpen = true"
         >
           {{ $t('app.tool.tooltip.manual_probe') }}
@@ -62,14 +62,13 @@
                 <template #activator="{ on, attrs }">
                   <app-btn
                     v-bind="attrs"
-                    x-small
-                    color=""
-                    fab
-                    text
+                    icon
                     @click="loadProfile(item.name)"
                     v-on="on"
                   >
-                    <v-icon>$open</v-icon>
+                    <v-icon dense>
+                      $open
+                    </v-icon>
                   </app-btn>
                 </template>
                 <span>{{ $t('app.bedmesh.tooltip.load') }}</span>
@@ -79,17 +78,13 @@
                 <template #activator="{ on, attrs }">
                   <app-btn
                     v-bind="attrs"
-                    color=""
-                    class="ml-2"
-                    fab
-                    text
-                    x-small
+                    icon
                     :disabled="item.adaptive"
                     @click="removeProfile(item.name)"
                     v-on="on"
                   >
-                    <v-icon color="">
-                      $close
+                    <v-icon dense>
+                      $delete
                     </v-icon>
                   </app-btn>
                 </template>
@@ -269,25 +264,21 @@
       :adaptive="saveDialogState.adaptive"
       @save="handleMeshSave"
     />
-
-    <manual-probe-dialog
-      v-if="manualProbeDialogOpen"
-      v-model="manualProbeDialogOpen"
-    />
   </collapsable-card>
 </template>
 
 <script lang="ts">
-import { Component, Mixins, Watch } from 'vue-property-decorator'
+import { Component, Mixins } from 'vue-property-decorator'
 import SaveMeshDialog from './SaveMeshDialog.vue'
 import StateMixin from '@/mixins/state'
 import ToolheadMixin from '@/mixins/toolhead'
 import type {
   MeshState,
-  KlipperBedMesh,
   MatrixType,
   BedMeshProfileListEntry
 } from '@/store/mesh/types'
+import type { KlipperPrinterBedMeshState, KlipperPrinterSettings } from '@/store/printer/types'
+import { encodeGcodeParamValue } from '@/util/gcode-helpers'
 
 @Component({
   components: {
@@ -295,8 +286,6 @@ import type {
   }
 })
 export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
-  manualProbeDialogOpen = false
-
   mapScaleLabels = ['min', '0.1', '0.2']
   boxScaleLabels = ['1.0', '1.5', '2.0']
 
@@ -311,7 +300,7 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
   }
 
   set matrix (val: MatrixType) {
-    this.$store.dispatch('mesh/onMatrix', val)
+    this.$typedDispatch('mesh/onMatrix', val)
   }
 
   get mapScale () {
@@ -319,7 +308,7 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
   }
 
   set mapScale (val: number) {
-    this.$store.dispatch('mesh/onScale', val)
+    this.$typedDispatch('mesh/onScale', val)
   }
 
   get boxScale () {
@@ -327,7 +316,7 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
   }
 
   set boxScale (val: number) {
-    this.$store.dispatch('mesh/onBoxScale', val)
+    this.$typedDispatch('mesh/onBoxScale', val)
   }
 
   get wireframe () {
@@ -335,7 +324,7 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
   }
 
   set wireframe (val: boolean) {
-    this.$store.dispatch('mesh/onWireframe', val)
+    this.$typedDispatch('mesh/onWireframe', val)
   }
 
   get flatSurface () {
@@ -343,31 +332,32 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
   }
 
   set flatSurface (val: boolean) {
-    this.$store.dispatch('mesh/onFlatSurface', val)
+    this.$typedDispatch('mesh/onFlatSurface', val)
   }
 
-  get mesh () {
-    return this.$store.state.mesh as MeshState
+  get mesh (): MeshState {
+    return this.$typedState.mesh
   }
 
   // The available meshes.
   get bedMeshProfiles (): BedMeshProfileListEntry[] {
-    return this.$store.getters['mesh/getBedMeshProfiles']
+    return this.$typedGetters['mesh/getBedMeshProfiles']
   }
 
   // The current mesh, unprocessed.
-  get currentMesh () {
-    return this.$store.state.printer.printer.bed_mesh as KlipperBedMesh
+  get currentMesh (): KlipperPrinterBedMeshState | undefined {
+    return this.$typedState.printer.printer.bed_mesh
   }
 
   // If we have a mesh loaded.
   get meshLoaded (): boolean {
-    return ('profile_name' in this.currentMesh && this.currentMesh.profile_name.length > 0)
+    return !!this.currentMesh?.profile_name
   }
 
   // If the printer supports QGL
   get printerSupportsQgl (): boolean {
-    const printerSettings = this.$store.getters['printer/getPrinterSettings']()
+    const printerSettings: KlipperPrinterSettings = this.$typedGetters['printer/getPrinterSettings']
+
     return 'quad_gantry_level' in printerSettings
   }
 
@@ -398,41 +388,39 @@ export default class BedMesh extends Mixins(StateMixin, ToolheadMixin) {
     )
 
     if (result) {
-      this.sendGcode(`BED_MESH_PROFILE LOAD="${name}"`)
+      this.sendGcode(`BED_MESH_PROFILE LOAD=${encodeGcodeParamValue(name)}`)
     }
   }
 
   removeProfile (name: string) {
-    this.sendGcode(`BED_MESH_PROFILE REMOVE="${name}"`)
+    this.sendGcode(`BED_MESH_PROFILE REMOVE=${encodeGcodeParamValue(name)}`)
   }
 
-  handleMeshSave (config: {name: string; removeDefault: boolean}) {
-    if (config.name !== this.currentMesh.profile_name) {
-      this.sendGcode(`BED_MESH_PROFILE SAVE="${config.name}"`)
+  handleMeshSave (config: { name: string; removeDefault: boolean }) {
+    const profileName = this.currentMesh?.profile_name
+
+    if (config.name !== profileName) {
+      this.sendGcode(`BED_MESH_PROFILE SAVE=${encodeGcodeParamValue(config.name)}`)
     }
-    if (config.removeDefault) {
-      this.sendGcode(`BED_MESH_PROFILE REMOVE="${this.currentMesh.profile_name}"`)
+
+    if (config.removeDefault && profileName) {
+      this.sendGcode(`BED_MESH_PROFILE REMOVE=${encodeGcodeParamValue(profileName)}`)
     }
   }
 
   handleOpenSaveDialog () {
-    const profile = this.bedMeshProfiles.find(mesh => mesh.name === this.currentMesh.profile_name)
+    const profileName = this.currentMesh?.profile_name
+
+    if (!profileName) {
+      return
+    }
+
+    const profile = this.bedMeshProfiles.find(mesh => mesh.name === profileName)
+
     this.saveDialogState = {
       open: true,
-      existingName: this.currentMesh.profile_name,
+      existingName: profileName,
       adaptive: profile?.adaptive ?? false
-    }
-  }
-
-  get showManualProbeDialogAutomatically () {
-    return this.$store.state.config.uiSettings.general.showManualProbeDialogAutomatically
-  }
-
-  @Watch('isManualProbeActive')
-  onIsManualProbeActive (value: boolean) {
-    if (value && this.showManualProbeDialogAutomatically &&
-      this.klippyReady && !this.printerPrinting) {
-      this.manualProbeDialogOpen = true
     }
   }
 }

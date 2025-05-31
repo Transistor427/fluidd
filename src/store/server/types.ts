@@ -8,6 +8,9 @@ export interface ServerState {
   moonraker_stats: ServerSystemStat[];
   throttled_state: ServerThrottledState | null;
   cpu_temp: number | null;
+  system_cpu_usage?: Record<string, number>;
+  system_uptime?: number;
+  websocket_connections?: number;
 }
 
 export interface ServerSystemStat {
@@ -35,14 +38,17 @@ export type ServerFlags =
 export interface ServerInfo {
   failed_components: string[];
   klippy_connected: boolean;
-  klippy_state: string;
+  klippy_state: KlippyState;
   components: string[];
   registered_directories: string[];
   warnings: string[];
   moonraker_version?: string;
-  api_version?: number[]
-  api_version_string?: string
+  api_version?: number[];
+  api_version_string?: string;
+  websocket_count?: number;
 }
+
+export type KlippyState = 'disconnected' | 'startup' | 'ready' | 'error' | 'shutdown'
 
 export interface SystemInfo {
   available_services?: string[];
@@ -54,7 +60,6 @@ export interface SystemInfo {
   network?: NetworkState;
   canbus?: CanBusState;
   instance_ids: InstanceIds;
-  software_version?: string;
 }
 
 export interface ServiceState {

@@ -36,6 +36,7 @@ import { Component, Mixins } from 'vue-property-decorator'
 import StateMixin from '@/mixins/state'
 import Console from '@/components/widgets/console/Console.vue'
 import BrowserMixin from '@/mixins/browser'
+import type { UpdateResponse } from '@/store/version/types'
 
 @Component({
   components: {
@@ -58,16 +59,16 @@ export default class UpdatingDialog extends Mixins(StateMixin, BrowserMixin) {
   set open (value: boolean) {
     if (!value) {
       this.invokedDialog = false
-      this.$store.commit('version/setClearUpdateResponse')
+      this.$typedCommit('version/setClearUpdateResponse')
     }
   }
 
-  get updating () {
-    return this.$store.state.version.busy
+  get updating (): boolean {
+    return this.$typedState.version.status?.busy ?? false
   }
 
-  get responses () {
-    return this.$store.getters['version/getResponses']
+  get responses (): UpdateResponse[] {
+    return this.$typedGetters['version/getResponses']
   }
 }
 </script>

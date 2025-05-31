@@ -1,11 +1,10 @@
 import type { MutationTree } from 'vuex'
 import { defaultState } from './state'
-import type { GcodePreviewState, ViewerOptions } from './types'
+import type { GcodePreviewState } from './types'
 import Vue from 'vue'
 import type { AppFile } from '@/store/files/types'
-import IsKeyOf from '@/util/is-key-of'
 
-export const mutations: MutationTree<GcodePreviewState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -33,14 +32,6 @@ export const mutations: MutationTree<GcodePreviewState> = {
     state.file = undefined
   },
 
-  setViewerState (state, payload: Partial<ViewerOptions>) {
-    for (const key of Object.keys(state.viewer)) {
-      if (IsKeyOf(key, payload) && payload[key] !== undefined) {
-        Vue.set(state.viewer, key, payload[key])
-      }
-    }
-  },
-
   setParserProgress (state, payload: number) {
     state.parserProgress = payload
   },
@@ -48,4 +39,4 @@ export const mutations: MutationTree<GcodePreviewState> = {
   setParserWorker (state, payload: Worker) {
     state.parserWorker = payload
   }
-}
+} satisfies MutationTree<GcodePreviewState>

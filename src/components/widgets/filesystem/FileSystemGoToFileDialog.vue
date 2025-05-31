@@ -48,7 +48,7 @@ import type { MoonrakerRootFile } from '@/store/files/types'
 import getFilePaths from '@/util/get-file-paths'
 import StateMixin from '@/mixins/state'
 
-type File = MoonrakerRootFile &{
+type File = MoonrakerRootFile & {
   filename: string
   filepath: string
   rootPath: string
@@ -57,7 +57,7 @@ type File = MoonrakerRootFile &{
 @Component({})
 export default class FileSystemGoToFileDialog extends Mixins(StateMixin) {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: String, required: true })
   readonly root!: string
@@ -65,12 +65,12 @@ export default class FileSystemGoToFileDialog extends Mixins(StateMixin) {
   search = ''
   loaded = false
 
-  get rootFiles (): MoonrakerRootFile[] {
-    return this.$store.getters['files/getRootFiles'](this.root) as MoonrakerRootFile[]
+  get rootFiles (): MoonrakerRootFile[] | undefined {
+    return this.$typedGetters['files/getRootFiles'](this.root)
   }
 
   get matchedFiles (): File[] {
-    if (!this.loaded) {
+    if (!this.loaded || !this.rootFiles) {
       return []
     }
 
@@ -96,7 +96,7 @@ export default class FileSystemGoToFileDialog extends Mixins(StateMixin) {
   }
 
   get loading (): boolean {
-    return this.hasWait(`${this.$waits.onFileSystem}/${this.root}/`) as boolean
+    return this.hasWait(`${this.$waits.onFileSystem}/${this.root}/`)
   }
 
   @Watch('loading')

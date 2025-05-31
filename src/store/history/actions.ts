@@ -3,8 +3,9 @@ import type { HistoryItem, HistoryState } from './types'
 import type { RootState } from '../types'
 import { SocketActions } from '@/api/socketActions'
 import { Globals } from '@/globals'
+import getFilePaths from '@/util/get-file-paths'
 
-export const actions: ActionTree<HistoryState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
@@ -56,17 +57,34 @@ export const actions: ActionTree<HistoryState, RootState> = {
   /**
    * History has changed, update the data.
    */
-  async onHistoryChange ({ commit }, payload: { action: string; job: HistoryItem }) {
+  async onHistoryChange ({ commit, rootState }, payload: { action: 'added' | 'finished'; job: HistoryItem }) {
     SocketActions.serverHistoryTotals()
-    if (
-      payload
-    ) {
-      if (payload.action === 'added') commit('setAddHistory', payload.job)
-      if (payload.action === 'finished') commit('setUpdateHistory', payload.job)
+
+    if (payload) {
+      switch (payload.action) {
+        case 'added': {
+          commit('setAddHistory', payload.job)
+
+          const { rootPath, filename } = getFilePaths(payload.job.filename, 'gcodes')
+
+          const pathContent = rootState.files.pathContent[rootPath]
+
+          // If the file is known, then update the file metadata
+          if (pathContent != null && pathContent.files.some(file => file.filename === filename)) {
+            SocketActions.serverFilesMetadata(payload.job.filename)
+          }
+
+          break
+        }
+        case 'finished':
+          commit('setUpdateHistory', payload.job)
+
+          break
+      }
     }
   },
 
   async onDelete ({ commit }, payload) {
     commit('setDeleteJob', payload.deleted_jobs)
   }
-}
+} satisfies ActionTree<HistoryState, RootState>

@@ -76,7 +76,6 @@
           </app-btn>
 
           <app-btn
-            color=""
             plain
             class="custom-transform-class text-none"
             :href="$globals.DOCS_AUTH_LOST_PASSWORD"
@@ -86,7 +85,6 @@
           </app-btn>
 
           <app-btn
-            color=""
             plain
             class="custom-transform-class text-none"
             :href="$globals.DOCS_AUTH"
@@ -104,6 +102,7 @@
 import { Component, Vue } from 'vue-property-decorator'
 import { appInit } from '@/init'
 import { consola } from 'consola'
+import type { InstanceConfig } from '@/store/config/types'
 
 @Component({})
 export default class Login extends Vue {
@@ -115,7 +114,7 @@ export default class Login extends Vue {
   availableSources = [this.source]
 
   async mounted () {
-    const authInfo = await this.$store.dispatch('auth/getAuthInfo')
+    const authInfo = await this.$typedDispatch('auth/getAuthInfo')
     this.source = authInfo.defaultSource ?? this.source
     this.availableSources = authInfo.availableSources ?? this.availableSources
   }
@@ -124,17 +123,17 @@ export default class Login extends Vue {
     this.error = false
     this.loading = true
     try {
-      await this.$store.dispatch('auth/login', { username: this.username, password: this.password, source: this.source })
-    } catch (err) {
+      await this.$typedDispatch('auth/login', { username: this.username, password: this.password, source: this.source })
+    } catch {
       this.error = true
     }
     this.loading = false
 
     // Re-init the app.
     if (!this.error) {
-      const instance = this.$store.getters['config/getCurrentInstance']
+      const instance: InstanceConfig | undefined = this.$typedGetters['config/getCurrentInstance']
 
-      const config = await appInit(instance, this.$store.state.config.hostConfig)
+      const config = await appInit(instance, this.$typedState.config.hostConfig)
 
       // Reconnect the socket with the new instance url.
       if (config.apiConnected && config.apiAuthenticated) {

@@ -32,6 +32,14 @@
       }
     },
     {
+      "name": "Cocoa Press",
+      "color": "#F27121",
+      "isDark": true,
+      "logo": {
+        "src": "logo_cocoapress.svg"
+      }
+    },
+    {
       "name": "EVA",
       "color": "#76FB00",
       "isDark": true,
@@ -71,6 +79,14 @@
       "isDark": true,
       "logo": {
         "src": "logo_ldo.svg"
+      }
+    },
+    {
+      "name": "Mellow",
+      "color": "#003DFF",
+      "isDark": true,
+      "logo": {
+        "src": "logo_mellow.svg"
       }
     },
     {
@@ -129,6 +145,14 @@
       "isDark": true,
       "logo": {
         "src": "logo_vzbot.svg"
+      }
+    },
+    {
+      "name": "Z-Bolt",
+      "color": "#2196F3",
+      "isDark": true,
+      "logo": {
+        "src": "logo_z-bolt.svg"
       }
     },
     {

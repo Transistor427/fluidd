@@ -7,11 +7,11 @@
   >
     <template #menu>
       <app-btn
-        v-if="!targetableMacros.length"
+        v-if="!klippyReady || !targetableMacros.length"
         small
-        class="ms-1 my-1"
+        class="me-1 my-1"
         :disabled="!isConnected"
-        @click="() => handleSelectSpool()"
+        @click="handleSelectSpool"
       >
         {{ $t('app.spoolman.label.change_spool') }}
       </app-btn>
@@ -28,7 +28,7 @@
           <app-btn
             v-bind="attrs"
             small
-            class="ms-1 my-1"
+            class="me-1 my-1"
             :disabled="!isConnected"
             v-on="on"
           >
@@ -42,17 +42,16 @@
             </v-icon>
           </app-btn>
         </template>
+
         <v-list dense>
-          <v-list-item @click="() => handleSelectSpool()">
+          <v-list-item @click="handleSelectSpool">
             <v-list-item-content>
               <v-list-item-title>
                 {{ $t('app.spoolman.label.active_spool') }}
               </v-list-item-title>
             </v-list-item-content>
 
-            <v-list-item-icon
-              v-if="activeSpool"
-            >
+            <v-list-item-icon v-if="activeSpool">
               <v-icon
                 :color="getSpoolColor(activeSpool)"
                 class="spool-icon"
@@ -62,21 +61,23 @@
             </v-list-item-icon>
           </v-list-item>
 
+          <v-divider />
+
           <template v-for="macro of targetableMacros">
             <v-list-item
               :key="macro.name"
-              :class="{primary: macro.variables?.active}"
-              @click="() => handleSelectSpool(macro)"
+              :class="{
+                primary: macro.variables?.active
+              }"
+              @click="handleSelectSpool(macro)"
             >
               <v-list-item-content>
                 <v-list-item-title>
-                  {{ macro.name }}
+                  {{ macro.name.toUpperCase() }}
                 </v-list-item-title>
               </v-list-item-content>
 
-              <v-list-item-icon
-                v-if="macro.variables.spool_id"
-              >
+              <v-list-item-icon v-if="macro.variables.spool_id">
                 <v-icon
                   :color="getSpoolColor(getSpoolById(macro.variables.spool_id))"
                   class="spool-icon"
@@ -92,74 +93,50 @@
 
     <v-progress-linear
       v-if="activeSpool && $vuetify.breakpoint.lgAndDown"
-      value="100"
+      :value="activeSpool.progress"
       :height="6"
-      :color="`#${activeSpool.filament.color_hex ?? ($vuetify.theme.dark ? 'fff' : '000')}`"
+      :color="getSpoolColor(activeSpool)"
     />
 
     <v-card-text>
       <v-row>
         <template v-if="activeSpool">
-          <v-col align-self="center">
-            <status-label
-              :label="$t('app.spoolman.label.vendor')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.filament.vendor?.name || '-' }}</span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.filament_name')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.filament.name }}</span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.remaining_weight')"
-              :label-width="labelWidth"
-            >
-              <span v-if="remainingFilamentUnit === 'weight'">
-                {{ $filters.getReadableWeightString(activeSpool.remaining_weight) }}
-                <small>/ {{ $filters.getReadableWeightString(activeSpool.filament.weight) }}</small>
-              </span>
-              <span v-else-if="remainingFilamentUnit === 'length'">
-                {{ $filters.getReadableLengthString(activeSpool.remaining_length) }}
-                <small>/ {{ $filters.getReadableLengthString($filters.convertFilamentWeightToLength(activeSpool.filament.weight ?? 0, activeSpool.filament.density, activeSpool.filament.diameter)) }}</small>
-              </span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.location')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.location || '-' }}</span>
-            </status-label>
-          </v-col>
-          <v-col align-self="center">
-            <status-label
-              :label="$t('app.spoolman.label.material')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.filament.material || '-' }}</span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.lot_nr')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.lot_nr || '-' }}</span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.first_used')"
-              :label-width="labelWidth"
-            >
-              <span>{{
-                activeSpool.first_used ? $filters.formatRelativeTimeToNow(activeSpool.first_used) : $tc('app.setting.label.never')
-              }}</span>
-            </status-label>
-            <status-label
-              :label="$t('app.spoolman.label.comment')"
-              :label-width="labelWidth"
-            >
-              <span>{{ activeSpool.comment || '-' }}</span>
-            </status-label>
+          <v-col
+            v-for="(fields, i) in selectedCardFields"
+            :key="`spoolman-card-col-${i}`"
+            align-self="center"
+          >
+            <template v-for="field in fields">
+              <status-label
+                :key="`spoolman-card-${field}`"
+                :label="getFieldLabel(field)"
+                :label-width="86"
+              >
+                <template v-if="field === 'remaining_weight'">
+                  <span v-if="remainingFilamentUnit === 'weight'">
+                    {{ getFormattedField('remaining_weight') }}
+                    <small>/ {{ getFormattedField('initial_weight') }}</small>
+                  </span>
+                  <span v-else-if="remainingFilamentUnit === 'length'">
+                    {{ getFormattedField('remaining_length') }}
+                    <small>/ {{ getFormattedField('initial_length') }}</small>
+                  </span>
+                </template>
+
+                <template v-else-if="field === 'used_weight'">
+                  <span v-if="remainingFilamentUnit === 'weight'">
+                    {{ getFormattedField('used_weight') }}
+                    <small>/ {{ getFormattedField('initial_weight') }}</small>
+                  </span>
+                  <span v-else-if="remainingFilamentUnit === 'length'">
+                    {{ getFormattedField('used_length') }}
+                    <small>/ {{ getFormattedField('initial_length') }}</small>
+                  </span>
+                </template>
+
+                <span v-else>{{ getFormattedField(field) }}</span>
+              </status-label>
+            </template>
           </v-col>
         </template>
 
@@ -183,84 +160,184 @@
           align-self="center"
           class="pa-0"
         >
-          <v-icon
+          <v-progress-circular
             v-if="activeSpool"
-            :color="getSpoolColor(activeSpool)"
-            size="110px"
-            class="spool-icon"
+            :rotate="-90"
+            :size="102"
+            :width="7"
+            :value="activeSpool.progress"
+            color="primary"
+            class="mr-4 flex-column"
           >
-            $filament
-          </v-icon>
+            <v-icon
+              :color="getSpoolColor(activeSpool)"
+              size="100"
+              class="spool-icon"
+            >
+              $filament
+            </v-icon>
+          </v-progress-circular>
           <v-icon
             v-else-if="isConnected"
-            size="55px"
+            size="55"
           >
             $progressQuestion
           </v-icon>
           <v-icon
             v-else
             color="warning"
-            size="55px"
+            size="55"
           >
             $warning
           </v-icon>
         </v-col>
       </v-row>
     </v-card-text>
+
+    <template #collapsed-content>
+      <v-progress-linear
+        v-if="activeSpool"
+        :value="activeSpool.progress"
+        :height="6"
+        :color="getSpoolColor(activeSpool)"
+      />
+    </template>
   </collapsable-card>
 </template>
 
 <script lang="ts">
 import { Component, Mixins } from 'vue-property-decorator'
 import StateMixin from '@/mixins/state'
-import type { MacroWithSpoolId, Spool } from '@/store/spoolman/types'
+import type { Spool } from '@/store/spoolman/types'
 import StatusLabel from '@/components/widgets/status/StatusLabel.vue'
 import type { Macro } from '@/store/macros/types'
+import type { SpoolmanRemainingFilamentUnit } from '@/store/config/types'
+
+type MacroWithSpoolId = Macro & {
+  variables: Record<string, unknown> & {
+    spool_id: number | null
+  }
+}
 
 @Component({
   components: { StatusLabel }
 })
 export default class SpoolmanCard extends Mixins(StateMixin) {
-  labelWidth = '86px'
-
   handleSelectSpool (targetMacro?: Macro) {
-    this.$store.commit('spoolman/setDialogState', {
+    this.$typedCommit('spoolman/setDialogState', {
       show: true,
       targetMacro: targetMacro?.name
     })
   }
 
-  get activeSpool (): Spool | null {
-    if (!this.isConnected) return null
-    return this.$store.getters['spoolman/getActiveSpool']
+  get selectedCardFields (): string[][] {
+    const fields = this.$typedState.config.uiSettings.spoolman.selectedCardFields
+    const columnCount = fields.length > 1 ? 2 : 1
+    const elementsPerColumn = Math.ceil(fields.length / columnCount)
+    return new Array(columnCount).fill(undefined).map((_, i) => fields.slice(i * elementsPerColumn, (i + 1) * elementsPerColumn))
+  }
+
+  get activeSpool (): Spool | undefined {
+    if (!this.isConnected) return undefined
+    return this.$typedGetters['spoolman/getActiveSpool']
+  }
+
+  get currency (): string | null {
+    return this.$typedState.spoolman.currency
   }
 
   get isConnected (): boolean {
-    return this.$store.getters['spoolman/getConnected']
+    return this.$typedState.spoolman.connected
   }
 
-  get targetableMacros (): MacroWithSpoolId[] {
-    const macros = this.$store.getters['macros/getMacros'] as Macro[]
+  get targetableMacros () {
+    const macros: Macro[] = this.$typedGetters['macros/getMacros']
 
     return macros
       .filter((macro): macro is MacroWithSpoolId => macro.variables != null && 'spool_id' in macro.variables)
-      .map(macro => ({
-        ...macro,
-        name: macro.name.toUpperCase()
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name))
+      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
   }
 
-  get remainingFilamentUnit () {
-    return this.$store.state.config.uiSettings.spoolman.remainingFilamentUnit
+  get remainingFilamentUnit (): SpoolmanRemainingFilamentUnit {
+    return this.$typedState.config.uiSettings.spoolman.remainingFilamentUnit
   }
 
   getSpoolById (id: number): Spool | undefined {
-    return this.$store.getters['spoolman/getSpoolById'](id)
+    return this.$typedGetters['spoolman/getSpoolById'](id)
   }
 
   getSpoolColor (spool?: Spool) {
-    return `#${spool?.filament.color_hex ?? (this.$vuetify.theme.dark ? 'fff' : '000')}`
+    return spool?.filament.color_hex ?? (this.$vuetify.theme.dark ? '#fff' : '#000')
+  }
+
+  getFieldLabel (field: string) {
+    switch (field) {
+      case 'remaining_weight':
+        return this.$t('app.spoolman.label.remaining')
+
+      case 'used_weight':
+        return this.$t('app.spoolman.label.used')
+
+      default:
+        return this.$t(`app.spoolman.label.${field}`)
+    }
+  }
+
+  getFormattedField (field: string) {
+    if (!this.activeSpool) return '-'
+
+    switch (field) {
+      case 'vendor':
+        return this.activeSpool.filament.vendor?.name || '-'
+
+      case 'filament_name':
+        return this.activeSpool.filament.name
+
+      case 'material':
+        return this.activeSpool.filament.material || '-'
+
+      case 'first_used':
+        return this.activeSpool.first_used ? this.$filters.formatRelativeTimeToNow(this.activeSpool.first_used) : this.$tc('app.setting.label.never')
+
+      case 'last_used':
+        return this.activeSpool.last_used ? this.$filters.formatRelativeTimeToNow(this.activeSpool.last_used) : this.$tc('app.setting.label.never')
+
+      case 'price':
+        return this.activeSpool.price != null ? this.$filters.getReadableCurrencyString(this.activeSpool.price, this.currency ?? '') : '-'
+
+      case 'density':
+        return this.activeSpool.filament.density || '-'
+
+      case 'diameter':
+        return this.activeSpool.filament.diameter ? this.$filters.getReadableLengthString(this.activeSpool.filament.diameter) : '-'
+
+      case 'extruder_temp':
+        return this.activeSpool.filament.settings_extruder_temp || '-'
+
+      case 'bed_temp':
+        return this.activeSpool.filament.settings_bed_temp || '-'
+
+      case 'remaining_weight':
+        return this.activeSpool.remaining_weight != null ? this.$filters.getReadableWeightString(this.activeSpool.remaining_weight) : '-'
+
+      case 'remaining_length':
+        return this.activeSpool.remaining_length != null ? this.$filters.getReadableLengthString(this.activeSpool.remaining_length) : '-'
+
+      case 'used_weight':
+        return this.activeSpool.used_weight != null ? this.$filters.getReadableWeightString(this.activeSpool.used_weight) : '-'
+
+      case 'used_length':
+        return this.activeSpool.used_length != null ? this.$filters.getReadableLengthString(this.activeSpool.used_length) : '-'
+
+      case 'initial_weight':
+        return this.activeSpool.initial_weight != null ? this.$filters.getReadableWeightString(this.activeSpool.initial_weight) : '-'
+
+      case 'initial_length':
+        return this.activeSpool.initial_length != null ? this.$filters.getReadableLengthString(this.activeSpool.initial_length) : '-'
+
+      default:
+        return this.activeSpool[field as keyof Spool] || '-'
+    }
   }
 }
 </script>

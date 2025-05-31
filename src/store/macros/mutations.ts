@@ -15,7 +15,7 @@ const sanitizeMacroForStorage = (macro: Macro) => {
   return macro
 }
 
-export const mutations: MutationTree<MacrosState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -33,18 +33,22 @@ export const mutations: MutationTree<MacrosState> = {
 
   // Updates a singular macro
   setUpdateMacro (state, macro: Macro) {
-    const m = sanitizeMacroForStorage({ ...macro })
-    const i = state.stored.findIndex(m => m.name === macro.name)
+    const lowerCaseName = macro.name.toLowerCase()
+    const i = state.stored.findIndex(m => m.name.toLowerCase() === lowerCaseName)
+    const processed = sanitizeMacroForStorage({
+      ...macro
+    })
     if (i < 0) {
-      state.stored.push(m)
+      state.stored.push(processed)
     } else {
-      Vue.set(state.stored, i, m)
+      Vue.set(state.stored, i, processed)
     }
   },
 
   setUpdateAllVisible (state, payload: { macros: Macro[]; visible: boolean }) {
     payload.macros.forEach((macro: Macro) => {
-      const i = state.stored.findIndex(m => m.name === macro.name)
+      const lowerCaseName = macro.name.toLowerCase()
+      const i = state.stored.findIndex(m => m.name.toLowerCase() === lowerCaseName)
       const processed = sanitizeMacroForStorage({
         ...macro,
         visible: payload.visible
@@ -68,11 +72,6 @@ export const mutations: MutationTree<MacrosState> = {
       id: payload.id,
       name: payload.name
     })
-    state.stored.forEach((macro, i) => {
-      if (macro.categoryId === payload.id) {
-        Vue.set(state.stored, i, { ...macro, categoryId: payload.id })
-      }
-    })
   },
 
   setRemoveCategory (state, payload: MacroCategory) {
@@ -89,7 +88,11 @@ export const mutations: MutationTree<MacrosState> = {
     }
   },
 
+  setUpdateCategories (state, payload: MacroCategory[]) {
+    state.categories = payload
+  },
+
   setExpanded (state, expanded: number[]) {
     Vue.set(state, 'expanded', expanded)
   }
-}
+} satisfies MutationTree<MacrosState>

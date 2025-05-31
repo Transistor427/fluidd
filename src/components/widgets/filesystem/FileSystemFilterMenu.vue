@@ -18,10 +18,9 @@
             :offset-y="15"
             :offset-x="15"
           >
-            <v-btn
+            <app-btn
               :disabled="disabled"
-              fab
-              small
+              icon
               text
               v-bind="attrs"
               v-on="{... menu, ...tooltip}"
@@ -29,7 +28,7 @@
               <v-icon>
                 $filter
               </v-icon>
-            </v-btn>
+            </app-btn>
           </v-badge>
         </template>
         <span>{{ $t('app.general.btn.filter') }}</span>
@@ -84,61 +83,28 @@ export default class FileSystemFilterMenu extends Vue {
   readonly disabled?: boolean
 
   get rootProperties (): RootProperties {
-    return this.$store.getters['files/getRootProperties'](this.root) as RootProperties
+    return this.$typedGetters['files/getRootProperties'](this.root)
   }
 
-  get filters () {
-    const filters: FileFilter[] = []
+  get filters (): FileFilter[] {
+    return this.rootProperties.filterTypes
+      .filter(filterType => {
+        switch (filterType) {
+          case 'print_start_time':
+            return this.supportsHistoryComponent
 
-    const rootFilterTypes = this.rootProperties.filterTypes
-
-    if (rootFilterTypes.includes('print_start_time') && this.supportsHistoryComponent) {
-      filters.push({
-        type: 'print_start_time',
-        text: this.$tc('app.file_system.filters.label.print_start_time')
+          default:
+            return true
+        }
       })
-    }
-
-    if (rootFilterTypes.includes('hidden_files')) {
-      filters.push({
-        type: 'hidden_files',
-        text: this.$tc('app.file_system.filters.label.hidden_files_folders')
-      })
-    }
-
-    if (rootFilterTypes.includes('klipper_backup_files')) {
-      filters.push({
-        type: 'klipper_backup_files',
-        text: this.$tc('app.file_system.filters.label.klipper_backup_files')
-      })
-    }
-
-    if (rootFilterTypes.includes('moonraker_backup_files')) {
-      filters.push({
-        type: 'moonraker_backup_files',
-        text: this.$tc('app.file_system.filters.label.moonraker_backup_files')
-      })
-    }
-
-    if (rootFilterTypes.includes('rolled_log_files')) {
-      filters.push({
-        type: 'rolled_log_files',
-        text: this.$tc('app.file_system.filters.label.rolled_log_files')
-      })
-    }
-
-    if (rootFilterTypes.includes('crowsnest_backup_files')) {
-      filters.push({
-        type: 'crowsnest_backup_files',
-        text: this.$tc('app.file_system.filters.label.crowsnest_backup_files')
-      })
-    }
-
-    return filters
+      .map((filterType): FileFilter => ({
+        type: filterType,
+        text: this.$tc(`app.file_system.filters.label.${filterType}`)
+      }))
   }
 
   get selectedFilterTypes (): FileFilterType[] {
-    const selectedFilters = this.$store.state.config.uiSettings.fileSystem.activeFilters[this.root] as FileFilterType[] ?? []
+    const selectedFilters: FileFilterType[] = this.$typedState.config.uiSettings.fileSystem.activeFilters[this.root] ?? []
     const filters = new Set(this.filters
       .map(filter => filter.type))
 
@@ -150,8 +116,8 @@ export default class FileSystemFilterMenu extends Vue {
     this.$emit('change', value)
   }
 
-  get supportsHistoryComponent () {
-    return this.$store.getters['server/componentSupport']('history')
+  get supportsHistoryComponent (): boolean {
+    return this.$typedGetters['server/componentSupport']('history')
   }
 }
 </script>

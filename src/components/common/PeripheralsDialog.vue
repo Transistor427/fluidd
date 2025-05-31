@@ -31,21 +31,20 @@
 
       <v-tooltip bottom>
         <template #activator="{ on, attrs }">
-          <v-btn
+          <app-btn
             v-bind="attrs"
-            fab
-            text
-            small
+            icon
             :disabled="!currentPeripheralGroup || hasWaitFor(currentPeripheralGroup)"
             @click.prevent.stop="handleRefresh()"
             v-on="on"
           >
             <v-icon
+              dense
               :class="{ 'spin-alt': currentPeripheralGroup && hasWaitFor(currentPeripheralGroup) }"
             >
               $refresh
             </v-icon>
-          </v-btn>
+          </app-btn>
         </template>
         <span>{{ $t('app.general.btn.refresh') }}</span>
       </v-tooltip>
@@ -94,6 +93,7 @@
                           :value="device.device_path"
                           label="device_path"
                           outlined
+                          persistent-placeholder
                           dense
                           readonly
                           hide-details
@@ -107,6 +107,7 @@
                           :value="device.path_by_id"
                           label="path_by_id"
                           outlined
+                          persistent-placeholder
                           dense
                           readonly
                           hide-details
@@ -120,6 +121,7 @@
                           :value="device.path_by_hardware"
                           label="path_by_hardware"
                           outlined
+                          persistent-placeholder
                           dense
                           readonly
                           hide-details
@@ -287,6 +289,7 @@
                           :value="canUuid.uuid"
                           :label="canUuid.application"
                           outlined
+                          persistent-placeholder
                           dense
                           readonly
                           hide-details
@@ -320,20 +323,20 @@ type PeripheralGroup = {
 @Component({})
 export default class ManualProbeDialog extends Mixins(StateMixin) {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   tab: number | null = null
 
   get peripherals (): Peripherals {
-    return this.$store.state.server.peripherals as Peripherals
+    return this.$typedState.server.peripherals
   }
 
   get canbusUuids (): Record<string, CanbusUuid[]> | null {
-    return this.$store.state.server.can_uuids as Record<string, CanbusUuid[]> | null
+    return this.$typedState.server.can_uuids
   }
 
   get systemInfo (): SystemInfo | null {
-    return this.$store.state.server.system_info as SystemInfo | null
+    return this.$typedState.server.system_info
   }
 
   get canbusInterfaces (): string[] {
@@ -411,7 +414,7 @@ export default class ManualProbeDialog extends Mixins(StateMixin) {
           break
 
         case 'can':
-          for (const canbusInterface in this.canbusInterfaces) {
+          for (const canbusInterface of this.canbusInterfaces) {
             SocketActions.machinePeripheralsCanbus(canbusInterface)
           }
           break

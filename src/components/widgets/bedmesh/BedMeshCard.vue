@@ -11,7 +11,7 @@
       <app-btn
         v-if="!fullscreen"
         small
-        class="ms-1 my-1"
+        class="me-1 my-1"
         :loading="hasWait($waits.onMeshCalibrate)"
         :disabled="printerBusy || !allHomed"
         @click="calibrate()"
@@ -19,38 +19,31 @@
         {{ $t('app.general.btn.calibrate') }}
       </app-btn>
 
-      <v-tooltip
-        v-if="canCopyImage"
-        bottom
-      >
+      <v-tooltip bottom>
         <template #activator="{ on, attrs }">
           <app-btn
             v-bind="attrs"
-            color=""
-            fab
-            x-small
-            text
-            class="ms-1 my-1"
+            icon
             :disabled="!hasMeshLoaded"
             v-on="on"
-            @click="copyImage()"
+            @click="downloadImage()"
           >
-            <v-icon>$screenshot</v-icon>
+            <v-icon dense>
+              $screenshot
+            </v-icon>
           </app-btn>
         </template>
-        <span>{{ $t('app.bedmesh.tooltip.copy_image') }}</span>
+        <span>{{ $t('app.bedmesh.tooltip.download_image') }}</span>
       </v-tooltip>
 
       <app-btn
         v-if="!fullscreen"
-        color=""
-        fab
-        x-small
-        text
-        class="ms-1 my-1"
-        @click="$filters.routeTo($router, '/tune')"
+        icon
+        @click="$filters.routeTo({ name: 'tune' })"
       >
-        <v-icon>$fullScreen</v-icon>
+        <v-icon dense>
+          $fullScreen
+        </v-icon>
       </app-btn>
     </template>
 
@@ -61,7 +54,7 @@
         :options="options"
         :data="series"
         :graphics="graphics"
-        :height="(isMobileViewport) ? '225px' : '525px'"
+        :height="(isMobileViewport) ? 225 : 525"
       />
 
       <span v-else>{{ $t('app.bedmesh.msg.not_loaded') }}</span>
@@ -75,7 +68,7 @@ import BedMeshChart from './BedMeshChart.vue'
 import StateMixin from '@/mixins/state'
 import ToolheadMixin from '@/mixins/toolhead'
 import BrowserMixin from '@/mixins/browser'
-import type { AppMeshes } from '@/store/mesh/types'
+import type { AppMeshes, MatrixType } from '@/store/mesh/types'
 
 @Component({
   components: {
@@ -177,7 +170,7 @@ export default class BedMeshCard extends Mixins(StateMixin, ToolheadMixin, Brows
       z: 100,
       silent: true,
       style: {
-        text: `Range: ${range.toFixed(4)}`
+        text: `${this.$t('app.general.label.range')}: ${range.toFixed(4)}`
       }
     }]
   }
@@ -207,41 +200,33 @@ export default class BedMeshCard extends Mixins(StateMixin, ToolheadMixin, Brows
     this.sendGcode('BED_MESH_CALIBRATE', this.$waits.onMeshCalibrate)
   }
 
-  get matrix () {
-    return this.$store.state.mesh.matrix
+  get matrix (): MatrixType {
+    return this.$typedState.mesh.matrix
   }
 
-  get scale () {
-    return this.$store.state.mesh.scale
+  get scale (): number {
+    return this.$typedState.mesh.scale
   }
 
-  get boxScale () {
-    return this.$store.state.mesh.boxScale
+  get boxScale (): number {
+    return this.$typedState.mesh.boxScale
   }
 
-  get wireframe () {
-    return this.$store.state.mesh.wireframe
+  get wireframe (): boolean {
+    return this.$typedState.mesh.wireframe
   }
 
-  get flatSurface () {
-    return this.$store.state.mesh.flatSurface
+  get flatSurface (): boolean {
+    return this.$typedState.mesh.flatSurface
   }
 
   // The current processed mesh data, if any.
   get mesh (): AppMeshes {
-    return this.$store.getters['mesh/getCurrentMeshData'] as AppMeshes
+    return this.$typedGetters['mesh/getCurrentMeshData']
   }
 
-  get canCopyImage () {
-    return (
-      typeof navigator.clipboard === 'object' &&
-      typeof navigator.clipboard.write === 'function' &&
-      typeof ClipboardItem === 'function'
-    )
-  }
-
-  copyImage () {
-    this.bedMeshChart.copyImage()
+  downloadImage () {
+    this.bedMeshChart.downloadImage()
   }
 }
 </script>

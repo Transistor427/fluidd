@@ -101,13 +101,13 @@ import type { Fan, Heater } from '@/store/printer/types'
 @Component({})
 export default class TemperaturePresetDialog extends Vue {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: Object, required: true })
   readonly preset!: TemperaturePreset
 
   get heaters (): Heater[] {
-    return this.$store.getters['printer/getHeaters']
+    return this.$typedGetters['printer/getHeaters']
   }
 
   get fans (): Fan[] {

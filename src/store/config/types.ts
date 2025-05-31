@@ -1,8 +1,8 @@
-import type { AppTablePartialHeader } from '@/types/tableheaders'
 import type { FileFilterType } from '../files/types'
 
 export interface ConfigState {
   [key: string]: any;
+  appReady: boolean;
   apiUrl: string;
   socketUrl: string;
   layoutMode: boolean;
@@ -17,15 +17,22 @@ export interface UiSettings {
   theme: ThemeConfig;
   editor: EditorConfig;
   dashboard: DashboardConfig;
-  tableHeaders: AppTableConfiguredHeaders;
+  tableHeaders: TableHeadersConfig;
+  thumbnailSizes: ThumbnailSizesConfig;
   gcodePreview: GcodePreviewConfig;
   fileSystem: FileSystemConfig;
   toolhead: ToolheadConfig;
   spoolman: SpoolmanConfig;
+  history: HistoryConfig;
+  mmu: MmuConfig;
+}
+
+export interface HistoryConfig {
+  timeInDays: boolean;
+  lengthInKilometers: boolean;
 }
 
 export interface ToolheadConfig {
-  forceMove: boolean;
   extrudeSpeed: number;
   extrudeLength: number;
 }
@@ -41,7 +48,19 @@ export interface SpoolmanConfig {
     key: string | null;
     desc: boolean | null;
   },
-  remainingFilamentUnit: 'weight' | 'length'
+  remainingFilamentUnit: SpoolmanRemainingFilamentUnit;
+  selectedCardFields: string[];
+}
+
+export type SpoolmanRemainingFilamentUnit = 'weight' | 'length'
+
+export interface MmuConfig {
+  showClogDetection: boolean;
+  showTtgMap: boolean;
+  showDetails: boolean;
+  largeFilamentStatus: boolean;
+  showLogos: boolean;
+  showUnavailableSpoolColor: boolean;
 }
 
 export interface HostConfig {
@@ -85,6 +104,7 @@ export interface GeneralConfig {
   timeFormat: string;
   enableKeyboardShortcuts: boolean;
   textSortOrder: TextSortOrder;
+  filesAndFoldersDragAndDrop: boolean;
   showRateOfChange: boolean;
   showRelativeHumidity: boolean;
   showBarometricPressure: boolean;
@@ -93,6 +113,7 @@ export interface GeneralConfig {
   showUploadAndPrint: boolean;
   flipConsoleLayout: boolean;
   cameraFullscreenAction: CameraFullscreenAction;
+  printerPowerDevice: null | string;
   topNavPowerToggle: null | string;
   showManualProbeDialogAutomatically: boolean;
   showBedScrewsAdjustDialogAutomatically: boolean;
@@ -102,7 +123,6 @@ export interface GeneralConfig {
   printProgressCalculation: PrintProgressCalculation[];
   printEtaCalculation: PrintEtaCalculation[];
   enableDiagnostics: boolean;
-  thumbnailSize: number;
   colorPickerValueRange: ColorPickerValueRange;
 }
 
@@ -110,7 +130,7 @@ export type ToolheadControlStyle = 'cross' | 'bars' | 'circle'
 
 export type TextSortOrder = 'default' | 'numeric-prefix' | 'version'
 
-export type CameraFullscreenAction = 'embed' | 'rawstream';
+export type CameraFullscreenAction = 'embed' | 'rawstream'
 
 export type PrintInProgressLayout = 'default' | 'compact'
 
@@ -144,11 +164,14 @@ export interface ThemeLogo {
 
 export type RestoreViewState = 'never' | 'session' | 'local'
 
+export type KlipperSaveAndRestartAction = 'auto' | 'firmware-restart' | 'host-restart' | 'service-restart'
+
 export interface EditorConfig {
   confirmDirtyEditorClose: boolean;
   autoEditExtensions: string[];
   restoreViewState: RestoreViewState,
   codeLens: boolean;
+  klipperSaveAndRestartAction: KlipperSaveAndRestartAction;
 }
 
 export interface Axis {
@@ -165,7 +188,7 @@ export interface DashboardConfig {
 
 export interface SaveByPath {
   path: string;
-  value: string | boolean | number;
+  value: unknown;
   server?: boolean;
 }
 
@@ -190,12 +213,8 @@ export interface InstanceConfig extends ApiConfig {
 export interface TemperaturePreset {
   id: number;
   name: string;
-  values: TemperaturePresetValues;
+  values: Record<string, TemperaturePresetValue>;
   gcode?: string;
-}
-
-export interface TemperaturePresetValues {
-  [key: string]: TemperaturePresetValue;
 }
 
 export interface TemperaturePresetValue {
@@ -204,8 +223,15 @@ export interface TemperaturePresetValue {
   active: boolean;
 }
 
-export interface AppTableConfiguredHeaders {
-  [root: string]: AppTablePartialHeader[];
+export interface TableHeadersConfig extends Record<string, ConfiguredTableHeader[] | undefined> {
+}
+
+export interface ThumbnailSizesConfig extends Record<string, number | undefined> {
+}
+
+export interface ConfiguredTableHeader {
+  value: string;
+  visible?: boolean;
 }
 
 export interface GcodePreviewConfig {
@@ -225,6 +251,14 @@ export interface GcodePreviewConfig {
     horizontal: boolean;
     vertical: boolean;
   };
+  showCurrentLayer: boolean;
+  showNextLayer: boolean;
+  showPreviousLayer: boolean;
+  showMoves: boolean;
+  showExtrusions: boolean;
+  showRetractions: boolean;
+  showParts: boolean;
+  followProgress: boolean;
 }
 
 export interface FileSystemConfig {

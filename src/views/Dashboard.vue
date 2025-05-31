@@ -1,7 +1,7 @@
 <template>
   <v-row :dense="$vuetify.breakpoint.smAndDown">
     <template v-for="(container, containerIndex) in containers">
-      <v-col
+      <app-observed-column
         v-if="inLayout || hasCards(container)"
         :key="`container${containerIndex}`"
         cols="12"
@@ -9,35 +9,28 @@
         :lg="columnSpan"
         :class="{ 'drag': inLayout }"
       >
-        <app-draggable
-          v-model="containers[containerIndex]"
-          class="list-group"
-          :options="{
-            animation: 200,
-            handle: '.handle',
-            group: 'dashboard',
-            disabled: !inLayout,
-            ghostClass: 'ghost'
-          }"
-          target=":first-child"
-          @end="handleUpdateLayout"
-        >
-          <transition-group
-            type="transition"
-            :name="!inLayout ? 'flip-list' : undefined"
+        <template #default="{ narrow }">
+          <app-draggable
+            v-model="containers[containerIndex]"
+            class="list-group"
+            :options="{
+              group: 'dashboard',
+              disabled: !inLayout,
+            }"
+            @end="handleUpdateLayout"
           >
             <template v-for="c in container">
               <component
                 :is="c.id"
                 v-if="inLayout || (c.enabled && !filtered(c))"
                 :key="c.id"
-                :menu-collapsed="menuCollapsed"
-                class="mb-2 mb-sm-4"
+                :narrow="narrow"
+                class="mb-2 mb-md-4"
               />
             </template>
-          </transition-group>
-        </app-draggable>
-      </v-col>
+          </app-draggable>
+        </template>
+      </app-observed-column>
     </template>
   </v-row>
 </template>
@@ -55,13 +48,16 @@ import ConsoleCard from '@/components/widgets/console/ConsoleCard.vue'
 import OutputsCard from '@/components/widgets/outputs/OutputsCard.vue'
 import PrinterLimitsCard from '@/components/widgets/limits/PrinterLimitsCard.vue'
 import RetractCard from '@/components/widgets/retract/RetractCard.vue'
-import type { LayoutConfig } from '@/store/layout/types'
+import type { LayoutConfig, LayoutContainer } from '@/store/layout/types'
 import BedMeshCard from '@/components/widgets/bedmesh/BedMeshCard.vue'
 import GcodePreviewCard from '@/components/widgets/gcode-preview/GcodePreviewCard.vue'
 import JobQueueCard from '@/components/widgets/job-queue/JobQueueCard.vue'
 import SpoolmanCard from '@/components/widgets/spoolman/SpoolmanCard.vue'
+import MmuCard from '@/components/widgets/mmu/MmuCard.vue'
 import SensorsCard from '@/components/widgets/sensors/SensorsCard.vue'
 import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensorsCard.vue'
+import BeaconCard from '@/components/widgets/beacon/BeaconCard.vue'
+import type { KlipperPrinterSettings } from '@/store/printer/types'
 
 @Component({
   components: {
@@ -79,24 +75,17 @@ import RunoutSensorsCard from '@/components/widgets/runout-sensors/RunoutSensors
     GcodePreviewCard,
     JobQueueCard,
     SpoolmanCard,
+    MmuCard,
     SensorsCard,
-    RunoutSensorsCard
+    RunoutSensorsCard,
+    BeaconCard
   }
 })
 export default class Dashboard extends Mixins(StateMixin) {
-  menuCollapsed = false
   containers: Array<LayoutConfig[]> = []
 
   mounted () {
     this.onLayoutChange()
-
-    window.addEventListener('resize', this.updateMenuCollapsed)
-
-    this.updateMenuCollapsed()
-  }
-
-  unmounted () {
-    window.removeEventListener('resize', this.updateMenuCollapsed)
   }
 
   get columnCount () {
@@ -107,70 +96,81 @@ export default class Dashboard extends Mixins(StateMixin) {
 
   @Watch('columnCount')
   onColumnCount (value: number) {
-    this.$store.commit('config/setContainerColumnCount', value)
-
-    this.updateMenuCollapsed()
+    this.$typedCommit('config/setContainerColumnCount', value)
   }
 
   get columnSpan () {
     return 12 / this.columnCount
   }
 
-  get hasCameras (): boolean {
-    return this.$store.getters['webcams/getEnabledWebcams'].length > 0
+  get printerSettings (): KlipperPrinterSettings {
+    return this.$typedGetters['printer/getPrinterSettings']
   }
 
-  get hasHeatersOrTemperatureSensors () {
+  get hasCameras (): boolean {
+    return this.$typedGetters['webcams/getEnabledWebcams'].length > 0
+  }
+
+  get hasHeatersOrTemperatureSensors (): boolean {
     return (
-      this.$store.getters['printer/getHeaters'].length > 0 ||
-      this.$store.getters['printer/getOutputs'](['temperature_fan']).length > 0 ||
-      this.$store.getters['printer/getSensors'].length > 0
+      this.$typedGetters['printer/getHeaters'].length > 0 ||
+      this.$typedGetters['printer/getOutputs'](['temperature_fan']).length > 0 ||
+      this.$typedGetters['printer/getSensors'].length > 0
     )
   }
 
   get hasSensors (): boolean {
-    return this.$store.getters['sensors/getSensors'].length > 0
+    return this.$typedGetters['sensors/getSensors'].length > 0
   }
 
   get firmwareRetractionEnabled (): boolean {
-    return 'firmware_retraction' in this.$store.getters['printer/getPrinterSettings']()
+    return 'firmware_retraction' in this.printerSettings
   }
 
   get supportsJobQueue (): boolean {
-    return this.$store.getters['server/componentSupport']('job_queue')
+    return this.$typedGetters['server/componentSupport']('job_queue')
   }
 
-  get supportsBedMesh () {
-    return this.$store.getters['mesh/getSupportsBedMesh']
+  get supportsBedMesh (): boolean {
+    return this.$typedGetters['mesh/getSupportsBedMesh']
   }
 
-  get supportsRunoutSensors () {
-    return this.$store.getters['printer/getRunoutSensors'].length > 0
+  get supportsBeacon (): boolean {
+    return this.$typedGetters['printer/getSupportsBeacon']
   }
 
-  get supportsSpoolman () {
-    return this.$store.getters['server/componentSupport']('spoolman')
+  get supportsRunoutSensors (): boolean {
+    return this.$typedGetters['printer/getRunoutSensors'].length > 0
   }
 
-  get hasMacros () {
-    return this.$store.getters['macros/getVisibleMacros'].length > 0
+  get supportsSpoolman (): boolean {
+    return this.$typedGetters['server/componentSupport']('spoolman')
   }
 
-  get hasOutputs () {
+  get supportsMmu (): boolean {
+    return this.$typedState.printer.printer.mmu != null
+  }
+
+  get hasMacros (): boolean {
+    return this.$typedGetters['macros/getVisibleMacros'].length > 0
+  }
+
+  get hasOutputs (): boolean {
     return (
-      this.$store.getters['printer/getAllFans'].length > 0 ||
-      this.$store.getters['printer/getPins'].length > 0 ||
-      this.$store.getters['printer/getAllLeds'].length > 0
+      this.$typedGetters['printer/getAllFans'].length > 0 ||
+      this.$typedGetters['printer/getPins'].length > 0 ||
+      this.$typedGetters['printer/getAllLeds'].length > 0
     )
   }
 
   get inLayout (): boolean {
-    return (this.$store.state.config.layoutMode)
+    return this.$typedState.config.layoutMode
   }
 
-  get layout () {
-    const layoutName = this.$store.getters['layout/getSpecificLayoutName']
-    return this.$store.getters['layout/getLayout'](layoutName)
+  get layout (): LayoutContainer | undefined {
+    const layoutName: string = this.$typedGetters['layout/getSpecificLayoutName']
+
+    return this.$typedGetters['layout/getLayout'](layoutName)
   }
 
   @Watch('layout')
@@ -178,9 +178,9 @@ export default class Dashboard extends Mixins(StateMixin) {
     const containers: Array<LayoutConfig[]> = []
 
     for (let index = 1; index <= 4; index++) {
-      const container = this.layout[`container${index}`]
+      const container = this.layout?.[`container${index}`]
 
-      if (container?.length > 0) {
+      if (container && container.length > 0) {
         containers.push(container)
       }
     }
@@ -192,13 +192,11 @@ export default class Dashboard extends Mixins(StateMixin) {
     this.containers = containers.slice(0, 4)
   }
 
-  updateMenuCollapsed () {
-    this.menuCollapsed = (this.$el.clientWidth / this.columnCount) < 560
-  }
-
   handleUpdateLayout () {
-    this.$store.dispatch('layout/onLayoutChange', {
-      name: this.$store.getters['layout/getSpecificLayoutName'],
+    const name: string = this.$typedGetters['layout/getSpecificLayoutName']
+
+    this.$typedDispatch('layout/onLayoutChange', {
+      name,
       value: {
         container1: this.containers[0],
         container2: this.containers[1],
@@ -222,8 +220,10 @@ export default class Dashboard extends Mixins(StateMixin) {
     if (item.id === 'job-queue-card' && !this.supportsJobQueue) return true
     if (item.id === 'retract-card' && !this.firmwareRetractionEnabled) return true
     if (item.id === 'bed-mesh-card' && !this.supportsBedMesh) return true
+    if (item.id === 'beacon-card' && !this.supportsBeacon) return true
     if (item.id === 'runout-sensors-card' && !this.supportsRunoutSensors) return true
     if (item.id === 'spoolman-card' && !this.supportsSpoolman) return true
+    if (item.id === 'mmu-card' && !this.supportsMmu) return true
     if (item.id === 'sensors-card' && !this.hasSensors) return true
     if (item.id === 'temperature-card' && !this.hasHeatersOrTemperatureSensors) return true
 

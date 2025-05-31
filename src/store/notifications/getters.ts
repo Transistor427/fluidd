@@ -3,7 +3,7 @@ import type { AppNotification, NotificationsState } from './types'
 import type { Announcement } from '../announcements/types'
 import type { RootState } from '../types'
 
-export const getters: GetterTree<NotificationsState, RootState> = {
+export const getters = {
   getNotifications: (state, getters) => {
     // Sort by datestamp, most recent first.
     let notifications = [...state.notifications].sort((a, b) => {
@@ -20,7 +20,7 @@ export const getters: GetterTree<NotificationsState, RootState> = {
   },
 
   getAnnouncementsAsNotifications: (state, getters, rootState, rootGetters) => {
-    const announcements = rootGetters['announcements/getAnnouncements']
+    const announcements: Announcement[] = rootGetters['announcements/getAnnouncements']
 
     return announcements.map((a: Announcement): AppNotification => ({
       id: a.entry_id,
@@ -33,4 +33,4 @@ export const getters: GetterTree<NotificationsState, RootState> = {
       merge: true
     }))
   }
-}
+} satisfies GetterTree<NotificationsState, RootState>

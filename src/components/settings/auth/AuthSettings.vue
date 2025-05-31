@@ -61,14 +61,11 @@
 
           <app-btn
             :disabled="user.username === currentUser || user.source !== 'moonraker'"
-            fab
-            text
-            x-small
-            color=""
+            icon
             @click.stop="handleRemoveUser(user)"
           >
-            <v-icon color="">
-              $close
+            <v-icon dense>
+              $delete
             </v-icon>
           </app-btn>
         </app-setting>
@@ -120,13 +117,14 @@ export default class AuthSettings extends Vue {
     open: false
   }
 
-  get users () {
-    return this.$store.getters['auth/getUsers']
+  get users (): AppUser[] {
+    return this.$typedState.auth.users
   }
 
   get currentUser () {
-    const currentUser = this.$store.getters['auth/getCurrentUser']
-    return (currentUser && currentUser.username) ? currentUser.username : ''
+    const currentUser: AppUser | null = this.$typedState.auth.currentUser
+
+    return currentUser?.username ?? ''
   }
 
   handleAddUserDialog () {
@@ -156,15 +154,15 @@ export default class AuthSettings extends Vue {
     )
 
     if (result) {
-      this.$store.dispatch('auth/removeUser', user)
+      this.$typedDispatch('auth/removeUser', user)
     }
   }
 
   async handleSaveUser (user: AppUser) {
-    await this.$store.dispatch('auth/addUser', user)
+    await this.$typedDispatch('auth/addUser', user)
 
     // We only want to check trust if this is the first user being added.
-    if (this.users.length === 0) this.$store.dispatch('auth/checkTrust')
+    if (this.users.length === 0) this.$typedDispatch('auth/checkTrust')
   }
 }
 </script>

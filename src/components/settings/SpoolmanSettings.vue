@@ -94,6 +94,23 @@
       </app-setting>
 
       <v-divider />
+      <app-setting
+        :title="$t('app.spoolman.setting.card_fields')"
+      >
+        <v-select
+          v-model="fieldsToShowInSpoolmanCard"
+          multiple
+          filled
+          dense
+          hide-details="auto"
+          :rules="[
+            $rules.lengthGreaterThanOrEqual(1),
+          ]"
+          :items="availableFieldsToShowInSpoolmanCard"
+        />
+      </app-setting>
+
+      <v-divider />
       <app-setting :title="$t('app.setting.label.reset')">
         <app-btn
           outlined
@@ -113,17 +130,18 @@ import { Component, Mixins } from 'vue-property-decorator'
 import { defaultState } from '@/store/config/state'
 import StateMixin from '@/mixins/state'
 import type { WebcamConfig } from '@/store/webcams/types'
+import type { SpoolmanRemainingFilamentUnit } from '@/store/config/types'
 
 @Component({
   components: {}
 })
 export default class SpoolmanSettings extends Mixins(StateMixin) {
   get autoSpoolSelectionDialog (): boolean {
-    return this.$store.state.config.uiSettings.spoolman.autoSpoolSelectionDialog
+    return this.$typedState.config.uiSettings.spoolman.autoSpoolSelectionDialog
   }
 
   set autoSpoolSelectionDialog (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.autoSpoolSelectionDialog',
       value,
       server: true
@@ -131,7 +149,7 @@ export default class SpoolmanSettings extends Mixins(StateMixin) {
   }
 
   get enabledWebcams (): WebcamConfig[] {
-    return this.$store.getters['webcams/getEnabledWebcams'] as WebcamConfig[]
+    return this.$typedGetters['webcams/getEnabledWebcams']
   }
 
   get supportedCameras (): Array<{ text?: string, value: string | null, disabled?: boolean }> {
@@ -150,79 +168,119 @@ export default class SpoolmanSettings extends Mixins(StateMixin) {
   }
 
   get autoOpenQRDetectionCameraId (): string | null {
-    return this.$store.state.config.uiSettings.spoolman.autoOpenQRDetectionCamera
+    return this.$typedState.config.uiSettings.spoolman.autoOpenQRDetectionCamera
   }
 
   set autoOpenQRDetectionCameraId (value: string) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.autoOpenQRDetectionCamera',
       value,
       server: true
     })
   }
 
-  get preferDeviceCamera () {
-    return this.$store.state.config.uiSettings.spoolman.preferDeviceCamera
+  get preferDeviceCamera (): boolean {
+    return this.$typedState.config.uiSettings.spoolman.preferDeviceCamera
   }
 
   set preferDeviceCamera (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.preferDeviceCamera',
       value,
       server: true
     })
   }
 
-  get autoSelectSpoolOnMatch () {
-    return this.$store.state.config.uiSettings.spoolman.autoSelectSpoolOnMatch
+  get autoSelectSpoolOnMatch (): boolean {
+    return this.$typedState.config.uiSettings.spoolman.autoSelectSpoolOnMatch
   }
 
   set autoSelectSpoolOnMatch (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.autoSelectSpoolOnMatch',
       value,
       server: true
     })
   }
 
-  get warnOnNotEnoughFilament () {
-    return this.$store.state.config.uiSettings.spoolman.warnOnNotEnoughFilament
+  get warnOnNotEnoughFilament (): boolean {
+    return this.$typedState.config.uiSettings.spoolman.warnOnNotEnoughFilament
   }
 
   set warnOnNotEnoughFilament (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.warnOnNotEnoughFilament',
       value,
       server: true
     })
   }
 
-  get warnOnFilamentTypeMismatch () {
-    return this.$store.state.config.uiSettings.spoolman.warnOnFilamentTypeMismatch
+  get warnOnFilamentTypeMismatch (): boolean {
+    return this.$typedState.config.uiSettings.spoolman.warnOnFilamentTypeMismatch
   }
 
   set warnOnFilamentTypeMismatch (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.warnOnFilamentTypeMismatch',
       value,
       server: true
     })
   }
 
-  get remainingFilamentUnit () {
-    return this.$store.state.config.uiSettings.spoolman.remainingFilamentUnit
+  get remainingFilamentUnit (): SpoolmanRemainingFilamentUnit {
+    return this.$typedState.config.uiSettings.spoolman.remainingFilamentUnit
   }
 
-  set remainingFilamentUnit (value: string) {
-    this.$store.dispatch('config/saveByPath', {
+  set remainingFilamentUnit (value: SpoolmanRemainingFilamentUnit) {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman.remainingFilamentUnit',
       value,
       server: true
     })
   }
 
+  get availableFieldsToShowInSpoolmanCard () {
+    return [
+      'id',
+      'vendor',
+      'filament_name',
+      'remaining_weight',
+      'used_weight',
+      'location',
+      'material',
+      'lot_nr',
+      'price',
+      'density',
+      'diameter',
+      'extruder_temp',
+      'bed_temp',
+      'first_used',
+      'last_used',
+      'comment'
+    ].map(field => ({
+      value: field,
+      text: field === 'remaining_weight'
+        ? this.$t('app.spoolman.label.remaining')
+        : field === 'used_weight'
+          ? this.$t('app.spoolman.label.used')
+          : this.$t(`app.spoolman.label.${field}`)
+    }))
+  }
+
+  get fieldsToShowInSpoolmanCard (): string[] {
+    return this.$typedState.config.uiSettings.spoolman.selectedCardFields
+  }
+
+  set fieldsToShowInSpoolmanCard (value: string[]) {
+    this.$typedDispatch('config/saveByPath', {
+      path: 'uiSettings.spoolman.selectedCardFields',
+      value,
+      server: true
+    })
+  }
+
   handleReset () {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.spoolman',
       value: defaultState().uiSettings.spoolman,
       server: true

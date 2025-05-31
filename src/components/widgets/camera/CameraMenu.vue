@@ -10,19 +10,19 @@
       <app-btn
         v-bind="attrs"
         small
-        class="ms-1 my-1"
+        class="me-1 my-1"
         v-on="on"
       >
         <v-icon
           small
-          class="mr-1"
+          class="me-1"
         >
           $camera
         </v-icon>
         {{ activeCamera }}
         <v-icon
           small
-          class="ml-1"
+          class="ms-1"
           :class="{ 'rotate-180': value }"
         >
           $chevronDown
@@ -58,16 +58,16 @@ import type { WebcamConfig } from '@/store/webcams/types'
 @Component({})
 export default class CamerasMenu extends Mixins(StateMixin) {
   get activeCamera () {
-    const activeWebcam = this.$store.state.webcams.activeWebcam as string
-    const camera = this.$store.getters['webcams/getWebcamById'](activeWebcam) as WebcamConfig | undefined
+    const activeWebcam: string = this.$typedState.webcams.activeWebcam
+    const camera: WebcamConfig | undefined = this.$typedGetters['webcams/getWebcamById'](activeWebcam)
 
     return !camera
-      ? this.$t('app.general.btn.all')
+      ? this.$t('app.general.btn.all').toString()
       : camera.name
   }
 
   get enabledWebcams (): WebcamConfig[] {
-    return this.$store.getters['webcams/getEnabledWebcams'] as WebcamConfig[]
+    return this.$typedGetters['webcams/getEnabledWebcams']
   }
 
   get availableCameras (): Pick<WebcamConfig, 'uid' | 'name'>[] {

@@ -1,7 +1,9 @@
 <template>
   <div
     class="chart"
-    :style="{ 'height': height }"
+    :style="{
+      height: $filters.getPixelsString(isMobileViewport ? 180 : 260)
+    }"
   >
     <e-chart
       ref="chart"
@@ -11,6 +13,8 @@
       :init-options="{ renderer: 'svg' }"
       autoresize
       @legendselectchanged="handleLegendSelectChanged"
+      @legendselected="handleLegendSelectChanged"
+      @legendunselected="handleLegendSelectChanged"
     />
   </div>
 </template>
@@ -20,11 +24,12 @@ import { Component, Watch, Prop, Ref, Mixins } from 'vue-property-decorator'
 import type { ECharts, EChartsOption } from 'echarts'
 import getKlipperType from '@/util/get-klipper-type'
 import BrowserMixin from '@/mixins/browser'
+import type { ChartData, ChartSelectedLegends } from '@/store/charts/types'
 
 @Component({})
 export default class ThermalChart extends Mixins(BrowserMixin) {
-  @Prop({ type: String, default: '100%' })
-  readonly height!: string
+  @Prop({ type: Boolean })
+  readonly narrow?: boolean
 
   @Ref('chart')
   readonly chart!: ECharts
@@ -34,11 +39,11 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
   initialSelected: Record<string, boolean> = {}
 
   handleLegendSelectChanged (event: { selected: Record<string, boolean> }) {
-    this.$store.dispatch('charts/saveSelectedLegends', event.selected)
+    this.$typedDispatch('charts/saveSelectedLegends', event.selected)
 
-    let right = (this.isMobileViewport) ? 15 : 20
+    let right = (this.isMobileViewport || this.narrow) ? 15 : 20
     if (this.showPowerAxis(event.selected)) {
-      right = (this.isMobileViewport) ? 25 : 45
+      right = (this.isMobileViewport || this.narrow) ? 25 : 45
     }
 
     if (
@@ -55,8 +60,16 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
     }
   }
 
-  get chartData () {
-    return this.$store.getters['charts/getChartData']
+  get chartData (): ChartData[] {
+    return this.$typedState.charts.chart
+  }
+
+  get chartableSensors (): string[] {
+    return this.$typedGetters['printer/getChartableSensors']
+  }
+
+  get chartSelectedLegends (): ChartSelectedLegends {
+    return this.$typedState.charts.selectedLegends
   }
 
   @Watch('chartData')
@@ -85,21 +98,21 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
   init () {
     // Create the series and associated legends.
     const dataKeys = Object.keys(this.chartData[0])
-    const keys = this.$store.getters['printer/getChartableSensors'] as string[]
+    const keys = this.chartableSensors
 
     keys.forEach((key) => {
       this.series.push(this.createSeries(key))
-      if (dataKeys.includes(`${key}Target`)) this.series.push(this.createSeries(`${key}Target`))
-      if (dataKeys.includes(`${key}Power`)) this.series.push(this.createSeries(`${key}Power`))
-      if (dataKeys.includes(`${key}Speed`)) this.series.push(this.createSeries(`${key}Speed`))
+      if (dataKeys.includes(`${key}#target`)) this.series.push(this.createSeries(key, '#target'))
+      if (dataKeys.includes(`${key}#power`)) this.series.push(this.createSeries(key, '#power'))
+      if (dataKeys.includes(`${key}#speed`)) this.series.push(this.createSeries(key, '#speed'))
     })
   }
 
   get options () {
-    const isDark = this.$store.state.config.uiSettings.theme.isDark
+    const isDark: boolean = this.$typedState.config.uiSettings.theme.isDark
 
     const fontColor = (isDark) ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'
-    const fontSize = (this.isMobileViewport) ? 13 : 14
+    const fontSize = (this.isMobileViewport || this.narrow) ? 13 : 14
 
     const lineStyle = {
       color: (isDark) ? '#ffffff' : '#000000',
@@ -111,15 +124,15 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
       opacity: 0.5
     }
 
-    let right = (this.isMobileViewport) ? 15 : 20
+    let right = (this.isMobileViewport || this.narrow) ? 15 : 20
     if (this.showPowerAxis(this.initialSelected)) {
-      right = (this.isMobileViewport) ? 35 : 45
+      right = (this.isMobileViewport || this.narrow) ? 35 : 45
     }
     const grid = {
       top: 20,
-      left: (this.isMobileViewport) ? 35 : 45,
+      left: (this.isMobileViewport || this.narrow) ? 35 : 45,
       right,
-      bottom: (this.isMobileViewport) ? 52 : 38
+      bottom: (this.isMobileViewport || this.narrow) ? 52 : 38
     }
 
     const tooltip = {
@@ -166,10 +179,10 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
           params
             .forEach((param: any) => {
               if (
-                !param.seriesName.toLowerCase().endsWith('target') &&
-                !param.seriesName.toLowerCase().endsWith('power') &&
-                !param.seriesName.toLowerCase().endsWith('speed') &&
                 param.seriesName &&
+                !param.seriesName.endsWith('#target') &&
+                !param.seriesName.endsWith('#power') &&
+                !param.seriesName.endsWith('#speed') &&
                 param.value[param.seriesName] != null
               ) {
                 const name = param.seriesName.split(' ', 2).pop()
@@ -182,14 +195,14 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
                     <span style="float:right;margin-left:20px;font-size:${fontSize}px;color:${fontColor};font-weight:900">
                       ${param.value[param.seriesName].toFixed(2)}<small>°C</small>`
 
-                if (param.seriesName + 'Target' in param.value) {
-                  text += ` / ${param.value[param.seriesName + 'Target'].toFixed()}<small>°C</small>`
+                if (param.value[`${param.seriesName}#target`] != null) {
+                  text += ` / ${param.value[`${param.seriesName}#target`].toFixed()}<small>°C</small>`
                 }
-                if (param.seriesName + 'Power' in param.value) {
-                  text += ` / ${(param.value[param.seriesName + 'Power'] * 100).toFixed()}<small>%</small>`
+                if (param.value[`${param.seriesName}#power`] != null) {
+                  text += ` / ${(param.value[`${param.seriesName}#power`] * 100).toFixed()}<small>%</small>`
                 }
-                if (param.seriesName + 'Speed' in param.value) {
-                  text += ` / ${(param.value[param.seriesName + 'Speed'] * 100).toFixed()}<small>%</small>`
+                if (param.value[`${param.seriesName}#speed`] != null) {
+                  text += ` / ${(param.value[`${param.seriesName}#speed`] * 100).toFixed()}<small>%</small>`
                 }
                 text += `</span>
                   <div style="clear: both"></div>
@@ -205,7 +218,7 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
         boundaryGap: false,
         max: 'dataMax',
         min: (value: any) => {
-          const temperature_store_size = this.$store.getters['charts/getChartRetention']
+          const temperature_store_size: number = this.$typedGetters['charts/getChartRetention']
           return value.max - (temperature_store_size * 1000)
         },
         axisTick: {
@@ -221,7 +234,7 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
           color: tooltip.textStyle.color,
           fontSize,
           formatter: '{H}:{mm}',
-          rotate: (this.isMobileViewport) ? 45 : 0
+          rotate: (this.isMobileViewport || this.narrow) ? 45 : 0
         },
         axisPointer: {
           label: {
@@ -291,9 +304,10 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
     return options
   }
 
-  createSeries (key: string) {
+  createSeries (baseKey: string, subKey?: string) {
     // Grab the color
-    const color = this.$colorset.next(getKlipperType(key), key)
+    const key = `${baseKey}${subKey ?? ''}`
+    const color = this.$colorset.next(getKlipperType(baseKey), baseKey)
 
     // Base properties
     const series: any = {
@@ -320,7 +334,7 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
     }
 
     // If this is a target, adjust its display.
-    if (key.toLowerCase().endsWith('target')) {
+    if (subKey === '#target') {
       series.yAxisIndex = 0
       series.emphasis.lineStyle.width = 1
       series.lineStyle.width = 1
@@ -330,10 +344,7 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
     }
 
     // If this is a power or speed, adjust its display.
-    if (
-      key.toLowerCase().endsWith('power') ||
-      key.toLowerCase().endsWith('speed')
-    ) {
+    if (subKey === '#power' || subKey === '#speed') {
       series.yAxisIndex = 1
       series.emphasis.lineStyle.width = 1
       series.lineStyle.width = 1
@@ -343,34 +354,41 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
     }
 
     // Set the initial legend state (power and speed default off)
-    const storedLegends = this.$store.getters['charts/getSelectedLegends']
-    if (storedLegends[key] !== undefined) {
-      this.initialSelected[key] = storedLegends[key]
-    } else {
-      this.initialSelected[key] = !(
-        key.toLowerCase().endsWith('power') ||
-        key.toLowerCase().endsWith('speed')
-      )
-    }
+    this.initialSelected[key] = this.chartSelectedLegends[key] ?? (subKey !== '#power' && subKey !== '#speed')
 
     // Push the series into our options object.
     return series
   }
 
   showPowerAxis (selected: Record<string, boolean>) {
-    const filtered = Object.keys(selected)
-      .filter(key => key.toLowerCase().endsWith('power') || key.toLowerCase().endsWith('speed'))
-      .filter(key => selected[key] === true)
-
-    return (filtered.length > 0)
+    return Object.keys(selected)
+      .some(key =>
+        (
+          key.endsWith('#power') ||
+          key.endsWith('#speed')
+        ) &&
+        selected[key] === true
+      )
   }
 
-  legendToggleSelect (name: string) {
+  updateChartSelectedLegends (chartSelectedLegends: ChartSelectedLegends) {
     if (this.chart) {
-      this.chart.dispatchAction({
-        type: 'legendToggleSelect',
-        name
-      })
+      const entries = Object.entries(chartSelectedLegends)
+      let index = entries.length
+
+      for (const [name, value] of entries) {
+        // only raise events for the last change
+        const silent = --index !== 0
+
+        this.chart.dispatchAction({
+          type: value
+            ? 'legendSelect'
+            : 'legendUnSelect',
+          name
+        }, {
+          silent
+        })
+      }
     }
   }
 
@@ -415,6 +433,5 @@ export default class ThermalChart extends Mixins(BrowserMixin) {
   .chart {
     margin-top: 16px;
     width: 100%;
-    // height: 325px;
   }
 </style>

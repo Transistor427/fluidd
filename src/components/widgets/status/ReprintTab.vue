@@ -72,11 +72,12 @@
           >
             <div>
               <app-btn
-                color=""
                 icon
                 @click="$emit('print', item.filename)"
               >
-                <v-icon>$printer</v-icon>
+                <v-icon dense>
+                  $printer
+                </v-icon>
               </app-btn>
             </div>
           </td>
@@ -100,8 +101,8 @@ import type { HistoryItem } from '@/store/history/types'
   }
 })
 export default class ReprintTab extends Mixins(StateMixin, FilesMixin) {
-  get history () {
-    return this.$store.getters['history/getUniqueHistory'](3)
+  get history (): HistoryItem[] {
+    return this.$typedGetters['history/getUniqueHistory'](3)
   }
 
   getFilePaths (filename: string) {
@@ -110,7 +111,7 @@ export default class ReprintTab extends Mixins(StateMixin, FilesMixin) {
 
   get headers () {
     const headers = [
-      { text: '', value: 'data-table-icons', sortable: false, width: '24px' },
+      { text: '', value: 'data-table-icons', sortable: false, width: 24 },
       { text: this.$tc('app.general.table.header.name'), value: 'filename', sortable: false },
       { text: this.$tc('app.general.table.header.status'), value: 'status', sortable: false },
       { text: this.$tc('app.general.table.header.print_duration'), value: 'print_duration', sortable: false }
@@ -121,7 +122,7 @@ export default class ReprintTab extends Mixins(StateMixin, FilesMixin) {
   }
 
   handleJobThumbnailError (job: HistoryItem) {
-    this.$store.dispatch('history/clearHistoryThumbnails', job.job_id)
+    this.$typedDispatch('history/clearHistoryThumbnails', job.job_id)
   }
 }
 </script>

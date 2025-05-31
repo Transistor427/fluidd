@@ -385,7 +385,8 @@ import { Component, Ref, Mixins } from 'vue-property-decorator'
 import { defaultState } from '@/store/config/state'
 import type { VInput } from '@/types'
 import ToolheadMixin from '@/mixins/toolhead'
-import type { ToolheadControlStyle } from '@/store/config/types'
+import type { GeneralConfig, ToolheadControlStyle } from '@/store/config/types'
+import type { KlipperPrinterSettings } from '@/store/printer/types'
 
 @Component({
   components: {}
@@ -409,68 +410,68 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
   @Ref('zAdjustValues')
   readonly zAdjustValuesElement!: VInput
 
-  get defaultExtrudeSpeed () {
-    return this.$store.state.config.uiSettings.general.defaultExtrudeSpeed
+  get defaultExtrudeSpeed (): number {
+    return this.$typedState.config.uiSettings.general.defaultExtrudeSpeed
   }
 
   setDefaultExtrudeSpeed (value: string) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.defaultExtrudeSpeed',
       value: +value,
       server: true
     })
   }
 
-  get defaultExtrudeLength () {
-    return this.$store.state.config.uiSettings.general.defaultExtrudeLength
+  get defaultExtrudeLength (): number {
+    return this.$typedState.config.uiSettings.general.defaultExtrudeLength
   }
 
   setDefaultExtrudeLength (value: number) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.defaultExtrudeLength',
       value: +value,
       server: true
     })
   }
 
-  get defaultToolheadMoveLength () {
-    return this.$store.state.config.uiSettings.general.defaultToolheadMoveLength
+  get defaultToolheadMoveLength (): number {
+    return this.$typedState.config.uiSettings.general.defaultToolheadMoveLength
   }
 
   setDefaultToolheadMoveLength (value: number) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.defaultToolheadMoveLength',
       value: +value,
       server: true
     })
   }
 
-  get defaultToolheadXYSpeed () {
-    return this.$store.state.config.uiSettings.general.defaultToolheadXYSpeed
+  get defaultToolheadXYSpeed (): number {
+    return this.$typedState.config.uiSettings.general.defaultToolheadXYSpeed
   }
 
   setDefaultToolheadYXSpeed (value: number) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.defaultToolheadXYSpeed',
       value: +value,
       server: true
     })
   }
 
-  get defaultToolheadZSpeed () {
-    return this.$store.state.config.uiSettings.general.defaultToolheadZSpeed
+  get defaultToolheadZSpeed (): number {
+    return this.$typedState.config.uiSettings.general.defaultToolheadZSpeed
   }
 
   setDefaultToolheadZSpeed (value: number) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.defaultToolheadZSpeed',
       value: +value,
       server: true
     })
   }
 
-  get zAdjustValues () {
-    return this.$store.state.config.uiSettings.general.zAdjustDistances
+  get zAdjustValues (): number[] {
+    return this.$typedState.config.uiSettings.general.zAdjustDistances
   }
 
   set zAdjustValues (value: (number | string)[]) {
@@ -478,31 +479,31 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
       return
     }
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.zAdjustDistances',
       value: [...new Set(value.map(Number))].sort((a, b) => a - b),
       server: true
     })
   }
 
-  get toolheadCircleXYHomingEnabled () {
-    return this.$store.state.config.uiSettings.general.toolheadCircleXYHomingEnabled
+  get toolheadCircleXYHomingEnabled (): boolean {
+    return this.$typedState.config.uiSettings.general.toolheadCircleXYHomingEnabled
   }
 
   set toolheadCircleXYHomingEnabled (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadCircleXYHomingEnabled',
       value,
       server: true
     })
   }
 
-  get toolheadControlStyle () {
-    return this.$store.state.config.uiSettings.general.toolheadControlStyle
+  get toolheadControlStyle (): ToolheadControlStyle {
+    return this.$typedState.config.uiSettings.general.toolheadControlStyle
   }
 
   set toolheadControlStyle (value: ToolheadControlStyle) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadControlStyle',
       value,
       server: true
@@ -526,8 +527,8 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
     ]
   }
 
-  get toolheadMoveDistances () {
-    return this.$store.state.config.uiSettings.general.toolheadMoveDistances
+  get toolheadMoveDistances (): number[] {
+    return this.$typedState.config.uiSettings.general.toolheadMoveDistances
   }
 
   set toolheadMoveDistances (value: (number | string)[]) {
@@ -538,7 +539,7 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
     const toolheadMoveDistances = [...new Set(value.map(Number))]
       .sort((a, b) => a - b)
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadMoveDistances',
       value: toolheadMoveDistances,
       server: true
@@ -549,8 +550,8 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
     }
   }
 
-  get toolheadXYMoveDistances () {
-    return this.$store.state.config.uiSettings.general.toolheadXYMoveDistances
+  get toolheadXYMoveDistances (): number[] {
+    return this.$typedState.config.uiSettings.general.toolheadXYMoveDistances
   }
 
   set toolheadXYMoveDistances (value: (number | string)[]) {
@@ -558,15 +559,15 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
       return
     }
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadXYMoveDistances',
       value: [...new Set(value.map(Number))].sort((a, b) => a - b),
       server: true
     })
   }
 
-  get toolheadCircleXYMoveDistances () {
-    return this.$store.state.config.uiSettings.general.toolheadCircleXYMoveDistances
+  get toolheadCircleXYMoveDistances (): number[] {
+    return this.$typedState.config.uiSettings.general.toolheadCircleXYMoveDistances
   }
 
   set toolheadCircleXYMoveDistances (value: (number | string)[]) {
@@ -574,15 +575,15 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
       return
     }
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadCircleXYMoveDistances',
       value: [...new Set(value.map(Number))].sort((a, b) => a - b),
       server: true
     })
   }
 
-  get toolheadZMoveDistances () {
-    return this.$store.state.config.uiSettings.general.toolheadZMoveDistances
+  get toolheadZMoveDistances (): number[] {
+    return this.$typedState.config.uiSettings.general.toolheadZMoveDistances
   }
 
   set toolheadZMoveDistances (value: (number | string)[]) {
@@ -590,15 +591,15 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
       return
     }
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadZMoveDistances',
       value: [...new Set(value.map(Number))].sort((a, b) => a - b),
       server: true
     })
   }
 
-  get toolheadCircleZMoveDistances () {
-    return this.$store.state.config.uiSettings.general.toolheadCircleZMoveDistances
+  get toolheadCircleZMoveDistances (): number[] {
+    return this.$typedState.config.uiSettings.general.toolheadCircleZMoveDistances
   }
 
   set toolheadCircleZMoveDistances (value: (number | string)[]) {
@@ -606,107 +607,109 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
       return
     }
 
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.toolheadCircleZMoveDistances',
       value: [...new Set(value.map(Number))].sort((a, b) => a - b),
       server: true
     })
   }
 
-  get useGcodeCoords () {
-    return this.$store.state.config.uiSettings.general.useGcodeCoords
+  get useGcodeCoords (): boolean {
+    return this.$typedState.config.uiSettings.general.useGcodeCoords
   }
 
   set useGcodeCoords (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.useGcodeCoords',
       value,
       server: true
     })
   }
 
-  get invertX () {
-    return this.$store.state.config.uiSettings.general.axis.x.inverted
+  get invertX (): boolean {
+    return this.$typedState.config.uiSettings.general.axis.x.inverted
   }
 
   set invertX (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.axis.x.inverted',
       value,
       server: true
     })
   }
 
-  get invertY () {
-    return this.$store.state.config.uiSettings.general.axis.y.inverted
+  get invertY (): boolean {
+    return this.$typedState.config.uiSettings.general.axis.y.inverted
   }
 
   set invertY (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.axis.y.inverted',
       value,
       server: true
     })
   }
 
-  get invertZ () {
-    return this.$store.state.config.uiSettings.general.axis.z.inverted
+  get invertZ (): boolean {
+    return this.$typedState.config.uiSettings.general.axis.z.inverted
   }
 
   set invertZ (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.axis.z.inverted',
       value,
       server: true
     })
   }
 
-  get printerSupportsForceMove () {
-    return this.$store.getters['printer/getPrinterSettings']('force_move.enable_force_move') ?? false
+  get printerSupportsForceMove (): boolean {
+    const printerSettings: KlipperPrinterSettings = this.$typedGetters['printer/getPrinterSettings']
+
+    return printerSettings.force_move?.enable_force_move ?? false
   }
 
-  get showManualProbeDialogAutomatically () {
-    return this.$store.state.config.uiSettings.general.showManualProbeDialogAutomatically
+  get showManualProbeDialogAutomatically (): boolean {
+    return this.$typedState.config.uiSettings.general.showManualProbeDialogAutomatically
   }
 
   set showManualProbeDialogAutomatically (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showManualProbeDialogAutomatically',
       value,
       server: true
     })
   }
 
-  get showBedScrewsAdjustDialogAutomatically () {
-    return this.$store.state.config.uiSettings.general.showBedScrewsAdjustDialogAutomatically
+  get showBedScrewsAdjustDialogAutomatically (): boolean {
+    return this.$typedState.config.uiSettings.general.showBedScrewsAdjustDialogAutomatically
   }
 
   set showBedScrewsAdjustDialogAutomatically (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showBedScrewsAdjustDialogAutomatically',
       value,
       server: true
     })
   }
 
-  get showScrewsTiltAdjustDialogAutomatically () {
-    return this.$store.state.config.uiSettings.general.showScrewsTiltAdjustDialogAutomatically
+  get showScrewsTiltAdjustDialogAutomatically (): boolean {
+    return this.$typedState.config.uiSettings.general.showScrewsTiltAdjustDialogAutomatically
   }
 
   set showScrewsTiltAdjustDialogAutomatically (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showScrewsTiltAdjustDialogAutomatically',
       value,
       server: true
     })
   }
 
-  get forceMoveToggleWarning () {
-    return this.$store.state.config.uiSettings.general.forceMoveToggleWarning
+  get forceMoveToggleWarning (): boolean {
+    return this.$typedState.config.uiSettings.general.forceMoveToggleWarning
   }
 
   set forceMoveToggleWarning (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.forceMoveToggleWarning',
       value,
       server: true
@@ -714,15 +717,16 @@ export default class ToolHeadSettings extends Mixins(ToolheadMixin) {
   }
 
   handleReset () {
-    let value = defaultState().uiSettings.general
-    const current = this.$store.state.config.uiSettings.general
-    value = {
-      ...value,
-      instanceName: current.instanceName,
-      chartVisible: current.chartVisible,
-      hideTempWaits: current.hideTempWaits
+    const { instanceName, chartVisible, hideTempWaits }: GeneralConfig = this.$typedState.config.uiSettings.general
+
+    const value: GeneralConfig = {
+      ...defaultState().uiSettings.general,
+      instanceName,
+      chartVisible,
+      hideTempWaits
     }
-    this.$store.dispatch('config/saveByPath', {
+
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general',
       value,
       server: true

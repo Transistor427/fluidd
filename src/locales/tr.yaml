@@ -23,7 +23,7 @@ app:
       delete: Profili Sil
       load: Profil Yükle
       save: Kalibre edilmiş profili printer.cfg'ye kaydeder
-      copy_image: Yatak örgüsü görüntüsünü kopyala
+      download_image: Yatak örgüsü resmini indirin
   chart:
     label:
       current: Gerçek
@@ -31,11 +31,17 @@ app:
       power: Güç
       target: Hedef
       rate_of_change: Değişim
+      fan_breakpoints: Fan Kesme Noktaları
+      target_temperature: Hedef Sıcaklık
+      turn_off: Kapatın
     tooltip:
       help: >-
         Yakınlaştırmak için <kbd>Shift</kbd>'i basılı tutun.<br />Grafikte bir öğeyi
         değiştirmek için tıklayın.<br
         />Grafikte bir gücü değiştirmek için tıklayın.
+    title:
+      pid_calibrate: '{name} PID Kalibrasyonu'
+      mpc_calibrate: '{name} MPC Kalibre Et'
   console:
     label:
       auto_scroll: Otomatik kaydırma
@@ -56,7 +62,7 @@ app:
         Çoklu yazıcı kurulumları hakkında belgeleri görmek için lütfen <a href="%{url}"
         target="_blank">buraya</a> bakın
     hint:
-      add_printer: Örnek, http://fluiddpi.local
+      add_printer: Örnek, http://fluidd.local
     msg:
       trouble: >-
         Sorun mu yaşıyorsunuz? Daha fazla bilgi için <a href="%{url}" target="_blank">buraya</a>
@@ -66,20 +72,24 @@ app:
         API URL'nizi girin.<br />Bazı örnekler şunlar olabilir;<br
         /><blockquote>fluidd.local, https://192.168.1.150</blockquote>
   endstop:
-    label:
-      open: AÇIK
-      triggered: TETİKLENDİ
+    states:
+      label:
+        open: AÇIK
+        triggered: TETİKLENDİ
     msg:
       subtitle: Endstop durumunu güncellemek için yenile düğmesini kullanın.
+    label:
+      endstop: Endstop %{name}
   file_system:
     filters:
       label:
         crowsnest_backup_files: Crowsnest yedek dosyalarını filtrele
         print_start_time: Yazdırılanları filtrele
-        hidden_files_folders: Gizli dosya ve klasörleri filtrele
+        hidden_files: Gizli dosya ve klasörleri filtrele
         klipper_backup_files: Klipper yedek dosyalarını filtrele
         moonraker_backup_files: Moonraker yedekleme dosyalarını filtrele
         rolled_log_files: Sarılmış günlük dosyalarını filtrele
+        moonraker_temporary_upload_files: Moonraker geçici yükleme dosyalarını filtrele
     label:
       dir_name: Dizin adı
       disk_usage: Disk Kullanımı
@@ -90,6 +100,7 @@ app:
       uploaded: Yüklenen
       view_section_documentation: >-
         '%{section}' belgelerini görüntüle
+      sd_card_info: SD Kart Bilgileri
     msg:
       not_found: Dosya bulunamadı
       processing: İşleniyor
@@ -167,7 +178,7 @@ app:
       download: İndir
       duplicate: Çoğalt
       edit: Düzenle
-      exit_layout: Düzenleme modundan çık
+      exit_layout: Çıkış
       extrude: Ekstrüzyon
       filter: Filtrele
       forgot_password: Parolanızı mı unuttunuz?
@@ -195,9 +206,9 @@ app:
       rename: Yeniden Adlandır
       reprint: Yeniden Yazdır
       reset_file: Dosyayı Temizle
-      reset_layout: Varsayılan Düzen'e Sıfırla
-      reset_default_layout: Varsayılan Düzeni Sıfırla
-      restart_firmware: Firmware Yeniden Başlat
+      reset_layout: Sıfırla
+      reset_default_layout: Düzeni Sıfırla
+      restart_firmware: Yazılımı Yeniden Başlat
       restart_service: >-
         %{service} Yeniden Başlat
       restart_service_klipper: Klipper'i Yeniden Başlat
@@ -213,18 +224,20 @@ app:
       select_columns: Sütunları Seç
       send: Gönder
       set_color: Renk Ayarla
-      set_default_layout: Varsayılan Düzen Olarak Ayarla
+      set_default_layout: Varsayılan Olarak Ayarla
       shutdown: Kapat
       snooze: Ertele
       socket_reconnect: Yeniden Bağlan
       socket_refresh: Zorla Yenile
       thumbnail_size: Küçük Resim Boyutu
-      upload: Yükle
+      upload: Yükleme
       upload_files: Dosyaları Yükle
       upload_folder: Klasörü Yükle
       upload_print: Yükle ve Yazdır
       view: Görüntüle
       reset_stats: İstatistikleri Sıfırla
+      power_on_printer: Yazıcıyı Açın
+      perform_time_analysis: Zaman Analizi Yapın
     error:
       app_setup_link: >-
         Fluidd kurulum gereksinimlerini <a target="_blank"
@@ -236,6 +249,8 @@ app:
       failed_components: >-
         Moonraker'da başarısız eklentiler var, lütfen günlüklerinizi kontrol edin,
         yapılandırmanızı güncelleyin ve moonraker'ı yeniden başlatın.
+      printer_powered_off: Yazıcı şu anda kapalıdır.<br/><br/> Yazıcıyı açmak için
+        lütfen soldaki düğmeye tıklayın.
     label:
       accel_to_decel: Hızlanmadan Yavaşlamaya
       acceleration: Hızlanma
@@ -350,6 +365,12 @@ app:
       add_category: Kategori Ekle
       file_time: Dosya
       stepper_driver: '%{name} Sürücü'
+      device: Cihaz
+      environment_facing: Çevreye Yönelik
+      user_facing: Kullanıcı Yüzü
+      length_in_kilometers: Kilometre cinsinden uzunluk
+      time_in_days: Gün cinsinden zaman
+      z_hop_height: Z-Hop Yüksekliği
     msg:
       password_changed: Şifre değiştirildi
       wrong_password: Ups, bir şeyler ters gitti. Şifreniz doğru mu?
@@ -411,6 +432,16 @@ app:
           istediğinizden emin misiniz?
         no_file_preview: >-
           Şu anda %{name} önizlenemiyor.
+        confirm_remove_camera: Kamerayı %{name} kaldırmak istediğinizden emin misiniz?
+        confirm_remove_console_filter: Konsol filtresini %{name} kaldırmak istediğinizden
+          emin misiniz?
+        confirm_remove_macro_category: Makro kategorisi %{name}'i kaldırmak istediğinizden
+          emin misiniz?
+        confirm_remove_printer: Yazıcıyı %{name} kaldırmak istediğinizden emin misiniz?
+        confirm_remove_thermal_preset: Termal ön ayar %{name}'i kaldırmak istediğinizden
+          emin misiniz?
+        confirm_change_beacon_model: Yazıcı şu anda meşgul. Beacon modelini değiştirmek
+          istediğinizden emin misiniz?
     table:
       header:
         actions: Eylemler
@@ -440,6 +471,15 @@ app:
         start_time: Başlangıç
         status: Durum
         total_duration: Toplam süre
+        mmu_print: MMU yazdır
+        extruder_colors: Ekstrüder renkleri
+        filament_change_count: Filament değişiklikleri
+        filament_colors: Filament renkleri
+        filament_temps: Filament sıcaklıkları
+        filament_weights: Filament ağırlıkları
+        referenced_tools: Referans araçlar
+        file_processors: Dosya işleyicileri
+        user: Kullanıcı
     title:
       add_chart: Grafik Ekle
       add_printer: Yazıcı Ekle
@@ -471,10 +511,13 @@ app:
       stats: Yazıcı İstatistikleri
       system: Sistem
       system_overview: Sistem Bilgileri
-      temperature: Sıcaklık
+      temperature: Sıcak Hava
       timelapse: Zaman Atlama
       tool: Araç
       tune: Ayarla
+      beacon: İşaret
+      login: Giriş Yap
+      macro_category_settings: Makro Kategori Ayarları
     tooltip:
       browse_metrics: Mevcut metrikleri göz atın
       estop: Acil Dur
@@ -493,6 +536,13 @@ app:
       file_browser_configuration_help: >-
         Dosyaları ve klasörleri buradan alıp Yapılandırma Dosyalarına sürükleyip bırakarak
         kopyalayın
+      power_on_printer: Yazıcıya giden gücü açar
+      exit_layout: Düzen modundan çıkın
+      reset_default_layout: Sunucu genelinde varsayılan düzeni fabrika varsayılanlarına
+        sıfırlama
+      reset_layout: Geçerli düzeni sunucu genelinde varsayılan düzene sıfırla
+      set_default_layout: Geçerli düzeni sunucu genelinde varsayılan düzen olarak
+        ayarla
   history:
     msg:
       confirm: Emin misiniz? Bu, tüm geçmişi ve yazıcı istatistiklerini silecek
@@ -503,6 +553,10 @@ app:
       confirm: Emin misiniz? Bu, tüm yazıcı kuyruğunu temizleyecek
     label:
       number_of_copies: Kopya Sayısı
+      eta: TAHMİNİ
+      filament: Filament
+      print_time: Yazdırma süresi
+      unknown_jobs: Bilinmeyen işlemler
     title:
       multiply_job: İşi Çoğalt | İşleri Çoğalt
     tooltip:
@@ -522,6 +576,11 @@ app:
       standby: Beklemede
     title:
       printer_status: Yazıcı Durumu
+      stepper_driver_overheating: Step sürücü '%{name}' aşırı ısınıyor
+    msg:
+      possible_print_failure: Bu, başarısız bir yazdırmaya yol açabilir
+    url:
+      stepper_driver_overheating: '%{klipperDomain}/TMC_Drivers.html#tmc-reports-error-ot1overtemperror'
   setting:
     btn:
       add_camera: Kamera Ekle
@@ -674,6 +733,14 @@ app:
         otomatik olarak göster
       keyboard_shortcuts: Klavye kısayolları
       fluidd_settings_in_moonraker_db: Moonraker veritabanındaki Fluidd ayarları
+      drag_and_drop_functionality_for_files_and_folders: Dosya ve klasörler için sürükle-bırak
+        işlevi
+      auto: Otomatik
+      printer_power_device: Yazıcı güç cihazı
+      firmware_restart: Yazılımı Yeniden Başlat
+      host_restart: Makineyi Yeniden Başlat
+      klipper_save_and_restart_action: Klipper Kaydet ve Yeniden Başlat
+      service_restart: Servisi Yeniden Başlat
     timer_options:
       duration: Süre sadece
       filament: Filament
@@ -757,12 +824,16 @@ app:
       operating_system: İşletim Sistemi
       version: Sürüm
       virtualization: Sanallaştırma
+      application: Uygulama
+      connected: Bağlandı
+      disconnected: Bağlantı kesildi
+      non_critical_connection: Kritik olmayan bağlantı
     msg:
       canbus_warning: >-
         Sadece atanmamış CAN bus düğümleri algılanabilir.<br>
         İletişim sorunlarını önlemek için CAN bus'a yalnızca bir atanmamış cihaz bağlı
         olması önerilir.<br>
-        Daha fazla bilgiye <a target="_blank" href="https://moonraker.readthedocs.io/en/latest/web_api/#query-unassigned-canbus-uuids">buradan</a>
+        Daha fazla bilgiye <a target="_blank" href="https://moonraker.readthedocs.io/en/latest/external_api/machine/#query-unassigned-canbus-uuids">buradan</a>
         ulaşabilirsiniz.
       no_devices_found: Cihaz bulunamadı
       no_devices_searched: Cihazları aramak için yenileme düğmesini kullanın
@@ -896,7 +967,7 @@ app:
       select: 'Seç | {macro} için Seç'
     title:
       spoolman: Makara Yöneticisi
-      spool_selection: '{macro} için Makara Seçimi | {macro} için Makara Seçimi'
+      spool_selection: 'Makara Seçimi | {macro} için Makara Seçimi'
       scan_spool: Makara Tara
     label:
       active_spool: Aktif Makara
@@ -910,10 +981,23 @@ app:
       location: Konum
       lot_nr: Lot No
       material: Malzeme
-      remaining_weight: Kalan
+      remaining_weight: Kalan Ağırlık
       vendor: Satıcı
       weight: Ağırlık
       length: Uzunluk
+      density: Yoğunluk
+      initial_length: Başlangıç Uzunluğu
+      initial_weight: Başlangıç Ağırlığı
+      remaining_length: Kalan Uzunluk
+      remaining: Kalan
+      used_length: Kullanılan Uzunluk
+      used: Kullanıldı
+      extruder_temp: Ekstruder Sıcaklığı
+      price: Fiyatı
+      bed_temp: Yatak Sıcaklığı
+      colors: Renkler
+      diameter: Çap
+      used_weight: Kullanılan Ağırlık
     msg:
       no_spool: >-
         Bir makara seçmediniz.
@@ -960,6 +1044,7 @@ app:
       warn_on_filament_type_mismatch: Makaranın filament tipi ile slicer'da seçilen
         filament tipi eşleşmediğinde bir uyarı göster
       remaining_filament_unit: Kalan filamenti şu şekilde göster
+      card_fields: Spoolman kartında gösterilecek alanlar
   sensors:
     title:
       sensors: Sensörler
@@ -977,3 +1062,153 @@ app:
       navigation: Yönlendirme
     title:
       keyboard_shortcuts: Klavye Kısayolları
+  beacon:
+    label:
+      active: aktif
+      model_name: Model Adı
+      remove_model: '%{name} modelini kaldır'
+    tooltip:
+      delete: Modeli Sil
+      load: Modeli Yükle
+    msg:
+      hint: Eğer %{name} dışında bir şekilde kaydediyorsanız, %{name} modelini de
+        kaldırmayı seçebilirsiniz
+      not_found: Mevcut bir beacon modeli bulunamadı.
+  mmu:
+    btn:
+      recover_state: MMU Durumunu Düzelt
+      off: Kapalı
+      down: Aşağı
+      move: Hareket et
+      check_all_gates: Tüm Kapıları Kontrol Edin
+      check_gate: Kontrol Kapısı
+      eject: Çıkart
+      load: Yükle
+      load_ext: Harici Yükle
+      unload_ext: Harici Çıkar
+      unload: Çıkar
+      preload: Ön yükleme
+      print_stats: Yazdırma İstatistikleri
+      recover: Kurtar
+      sync_spoolman: Spoolman Eşitle
+      unlock: Kilidi aç
+      mmu_maintenance: MMU Bakımı
+      edit_gate_map: Filamentleri Düzenle
+      edit_ttg_map: Harita Araçları / Filamentler
+      sync: Senkronizasyon
+      unsync: Senkronize Olmadan
+      on: Açık
+      home: Ev
+      up: Yukarı
+      grip: Kavrama
+      release: Serbest Bırak
+      cancel: İptal Et
+      reset: Sıfırla
+    label:
+      spoolman: Spoolman
+      skip_automap: Otomatik Haritayı Atla
+      all_tools: Tüm Araçlar
+      save: Kaydet
+      cancel: İptal Et
+      clog_detection: Tıkanıklık Tespiti
+      tool_mapping: Takım Eşleme
+      choose_spool: Makarayı Seçin
+      filament_name: Filament Adı
+      load_speed: Yük hızı geçersiz kılar
+      reset: Sıfırla
+      temperature: Sıcaklık
+      motor_sync: Ekstrüder Motor Senkronizasyonu
+      spoolman_id: Spoolman Kimliği
+      extruder_only: Yalnızca Ekstrüder
+      mmu_motors: MMU Motorları
+      leds: Ledler
+      ui_visual: UI Görüntüsü
+      animation: Animasyon
+      config: Konfigürasyon
+      enable: Etkinleştir
+      unknown: Bilinmeyen
+      gate: Kapı
+      endless_spool: Sürekli Besleme
+      filament_info: Filament Bilgisi
+      slicer_expects: Dilimleyici Bekliyor
+      spoolman_last_used: Son Kullanılan
+      spoolman_never: Asla
+      spoolman_today: Bugün
+      spoolman_yesterday: Dün
+      spoolman_days_ago: '%{days} gün önce'
+      selector: Seçici
+      material: Malzeme
+      extruder_tx: Araçlar Tx
+      ok: Tamam
+    msg:
+      no_custom_controls: Özel Kontrol Yok
+      reset_gate_map_confirmation: Bu, tüm geçit haritasını 'mmu_parameters.cfg' içinde
+        tanımlanan varsayılana veya varsayılan yoksa boş haritaya sıfırlayacaktır
+      select_gate: Düzenlemek istediğiniz geçit/spool bilgisini seçin
+      spoolman_pull: Spoolman desteği “%{mode}” modundadır. Çoğu geçit özelliğinin
+        yerel olarak düzenlenmesi devre dışıdır. Spoolman DB'de spool/gate eşlemesini
+        doğrudan atayın veya MMU_SPOOLMAN komutunu kullanın
+      no_matching_spool: Eşleşen makara bulunamadı
+      are_you_sure: Emin misin?
+      bad_temperature: Sıcaklık aralık dışında
+      filament_available: Filament mevcut
+      maintenance_intro: Belirli MMU işlevlerini ve seçici yapılandırmayı doğrudan
+        yönetin.
+      gate_bypass: Kapı Bypass'a ayarlandı!
+      color: Renk
+      material: Malzeme
+      temperature: Sıcaklık
+      tool_not_used: Araç %{tool} bu baskıda kullanılmıyor, varsayılan eşlemeyi seçin
+      mismatch: Olası filament uyuşmazlığı
+      no_gate_data: Geçit verisi yok
+      select_tool: Eşlenecek Aracı seçin, ardından listeden kapıyı seçin
+      filament_unknown: Bilinmeyen filament durumu (lütfen ayarlayın)
+      filament_empty: Filament mevcut değil
+      filament_loaded: Filament ekstrüdere tamamen yüklenmiş mi yoksa tamamen boşaltılmış
+        mı?
+      no_gate: Bir kapı seçilmelidir
+      no_position: Pozisyonu kurtarma girişimi
+      no_tool: Bir araç seçilmelidir
+      remap: Bu, geçidi %{tool} olarak yeniden eşleyecektir
+      set_gate: Geçerli kapıya ayarlayın
+      set_tool: Geçerli araca ayarla
+      tool_bypass: Araç Bypass olarak ayarlandı!
+      no_active_spool: Aktif makara yok
+      no_spool_id: Makara kimliği yok
+      recover_filament_position: Filament Konumunu Kurtarma
+      multi_color: Bu, %{numTools} araçlarını kullanan bir Çok Malzemeli Tek Ekstrüder
+        baskısına benziyor. Muhtemelen araç eşlemesini gözden geçirmelisiniz
+      single_color: Bu tek renkli bir baskı gibi görünüyor ancak MMU'nuzda bypass
+        seçili değil. Seçilen aracı kontrol etmek isteyebilirsiniz
+      map_slicer_tools: Baskı için dilimleyici araçlarını MMU kapılarına eşleme
+      map_tools: Araçları MMU kapılarına eşleme
+      no_slicer_info: Dilimleyici bilgisi yok, %{tool} için varsayılan eşlemeyi seçin
+      spoolman_off: Spoolman desteği Happy Hare'de “%{mode}” şeklindedir. Bir kapıya
+        biriktirme kimliği atama devre dışı bırakıldı
+      recover_intro: Bu, Happy Hare MMU'nuzla senkronize olmadığında kullanılmak üzere
+        düşük seviyeli bir kurtarmadır. Önce otomatik kurtarmayı denemeniz önerilir,
+        ancak bu mevcut aracı veya geçidi düzeltmek için gerekli olacaktır (Alternatif
+        olarak A Tipi MMU'larda seçiciyi boşaltabilir ve yerleştirebilirsiniz).
+      warning_prefix: Uyarı-
+      reset_ttg_map_confirmation: Bu, tüm takım-kapı eşlemesini ve sonsuz bekletme
+        gruplarını 'mmu_parameters.cfg' içinde tanımlanan varsayılana veya varsayılan
+        yoksa varsayılan 1:1 eşlemeye geri döndürür
+      spoolman_other: Spoolman desteği “%{mode}” şeklindedir. İsteğe bağlı olarak
+        bir spool kimliği atayabilir veya kapı niteliklerini doğrudan düzenleyebilirsiniz
+    title:
+      recover_state: MMU Durumunu Düzeltme (Hata Kurtarma)
+      edit_ttg_map: Harita Araçları / Filamentler (TTG Haritasını Düzenle)
+      headline: Mmu
+      mmu_maintenance: MMU Bakımı
+      edit_gate_map: Filamentleri Düzenle (Geçit Haritasını Düzenle)
+    tooltip:
+      empty: Boş
+      color: Renk
+      spoolid: Makara Kimliği
+    setting:
+      show_details: Filament Ayrıntılarını Göster
+      show_ttg_map: TTG Haritasını Göster
+      large_filament_status: Büyük Filament Durumu
+      show_logos: Logoları Göster
+      show_clog_detection: Tıkanıklık Tespitini Göster
+      show_unavailable_spool_color: Kullanılamayan Makaraları Göster

@@ -22,14 +22,20 @@ app:
       delete: Delete Profile
       load: Load Profile
       save: Commits calibrated profile to printer.cfg
-      copy_image: Copy bed mesh image
+      download_image: Download bed mesh image
   chart:
     label:
       current: Actual
+      fan_breakpoints: Fan Breakpoints
       item: Name
       power: Power
-      target: Target
       rate_of_change: Change
+      target_temperature: Target Temperature
+      target: Target
+      turn_off: Turn Off
+    title:
+      mpc_calibrate: MPC Calibrate {name}
+      pid_calibrate: PID Calibrate {name}
     tooltip:
       help: >-
         Hold <kbd>Shift</kbd> to zoom.<br />Click an item to toggle in the graph.<br
@@ -53,7 +59,7 @@ app:
         see the documentation on multi printer setups <a href="%{url}"
         target="_blank">here</a>
     hint:
-      add_printer: E.g., http://fluiddpi.local
+      add_printer: E.g., http://fluidd.local
     msg:
       trouble: >-
         Having trouble? <a href="%{url}" target="_blank">See here</a> for more
@@ -63,9 +69,12 @@ app:
         Enter your API URL.<br />Some examples might be;<br
         /><blockquote>fluidd.local, https://192.168.1.150</blockquote>
   endstop:
+    states:
+      label:
+        open: OPEN
+        triggered: TRIGGERED
     label:
-      open: OPEN
-      triggered: TRIGGERED
+      endstop: Endstop %{name}
     msg:
       subtitle: Use the refresh button to update endstop status.
   file_system:
@@ -73,14 +82,16 @@ app:
       label:
         crowsnest_backup_files: Filter Crowsnest backup files
         print_start_time: Filter printed
-        hidden_files_folders: Filter hidden files and folders
+        hidden_files: Filter hidden files and folders
         klipper_backup_files: Filter Klipper backup files
         moonraker_backup_files: Filter Moonraker backup files
+        moonraker_temporary_upload_files: Filter Moonraker temporary upload files
         rolled_log_files: Filter rolled log files
     label:
       dir_name: Directory name
       disk_usage: Disk Usage
       diskinfo: Disk Information
+      sd_card_info: SD Card Information
       downloaded: Downloaded
       file_name: Filename
       transfer_rate: Transfer rate
@@ -163,7 +174,7 @@ app:
       download: Download
       duplicate: Duplicate
       edit: Edit
-      exit_layout: Exit layout mode
+      exit_layout: Exit
       extrude: Extrude
       filter: Filter
       forgot_password: Forgotten your password?
@@ -176,6 +187,7 @@ app:
       more_information: More information
       multiply: Multiply
       pause: Pause
+      power_on_printer: Power On Printer
       preheat: Preheat
       presets: Presets
       preview_gcode: Preview Gcode
@@ -191,8 +203,8 @@ app:
       rename: Rename
       reprint: Re-Print
       reset_file: Clear File
-      reset_layout: Reset to Default Layout
-      reset_default_layout: Reset Default Layout
+      reset_layout: Reset
+      reset_default_layout: Reset Default
       restart_firmware: Firmware Restart
       restart_service: Restart %{service}
       restart_service_klipper: Restart Klipper
@@ -208,11 +220,12 @@ app:
       select_columns: Select columns
       send: Send
       set_color: Set Color
-      set_default_layout: Set as Default Layout
+      set_default_layout: Save As Default
       shutdown: Shutdown
       snooze: Snooze
       socket_reconnect: Re-Connect
       socket_refresh: Force refresh
+      perform_time_analysis: Perform Time Analysis
       thumbnail_size: Thumbnail size
       upload: Upload
       upload_files: Upload Files
@@ -231,6 +244,9 @@ app:
       failed_components: >-
         Moonraker has failed plugins, please check your logs, update your
         configuration and restart moonraker.
+      printer_powered_off: >-
+        The printer is currently powered off.<br/><br/>
+        To power on the printer, please click the button on the left.
     label:
       accel_to_decel: Accel to Decel
       acceleration: Acceleration
@@ -257,11 +273,13 @@ app:
       current_password: Current password
       current_user: Current user
       default: Default
+      device: Device
       disabled_while_printing: Disabled while printing
       edit_camera: Edit Camera
       edit_filter: Edit Filter
       edit_preset: Edit Preset
       edit_user: Edit user
+      environment_facing: Environment Facing
       extrude_length: Extrude Length
       extrude_speed: Extrude Speed
       filament: Filament
@@ -277,6 +295,7 @@ app:
       layer: Layer
       layout: Layout
       ldap: LDAP
+      length_in_kilometers: Length in kilometers
       longest_job: Longest job
       low: Low
       manage_accounts: Manage Accounts
@@ -315,6 +334,7 @@ app:
       stepper_enabled: Stepper Enabled
       synced_extruder: Synced Extruder
       thumbnail_size: Thumbnail Size
+      time_in_days: Time in days
       total: Total
       total_filament: Total filament used
       total_filament_avg: Avg per print
@@ -331,11 +351,13 @@ app:
       unretract_speed: Unretract Speed
       upload_and_print: Upload and Print
       used: used
+      user_facing: User Facing
       username: Username
       velocity: Velocity
       version_sort: Version sort
       visible: Visible
       z_offset: Z Offset
+      z_hop_height: Z-Hop Height
       unsaved_changes: Unsaved Changes
       alias: Alias
       apply_z_offset: Apply and Save Z_Offset
@@ -376,6 +398,7 @@ app:
       msg:
         confirm: Are you sure?
         confirm_cancel_print: Are you sure you want to cancel the current print?
+        confirm_change_beacon_model: The printer is currently busy. Are you sure you want to change the beacon model?
         confirm_clear_mesh: The printer is currently busy. Are you sure you want to clear the bed mesh?
         confirm_delete: Are you sure? This will delete the selected item. | Are you sure? This will delete the {count} selected items.
         confirm_emergency_stop: Are you sure you want to emergency stop the printer?
@@ -383,6 +406,11 @@ app:
         confirm_forcemove_toggle: Are you sure? This can damage the printer.
         confirm_load_bedmesh_profile: The printer is currently busy. Are you sure you want to load profile %{name}?
         confirm_reboot_host: Are you sure? This will reboot your host system.
+        confirm_remove_camera: Are you sure you want to remove the camera %{name}?
+        confirm_remove_console_filter: Are you sure you want to remove the console filter %{name}?
+        confirm_remove_macro_category: Are you sure you want to remove the macro category %{name}?
+        confirm_remove_printer: Are you sure you want to remove the printer %{name}?
+        confirm_remove_thermal_preset: Are you sure you want to remove the thermal preset %{name}?
         confirm_remove_user: Are you sure you want to remove user %{username}?
         confirm_shutdown_host: Are you sure? This will shutdown your host system.
         confirm_service_start: Are you sure you want to start the %{name} service?
@@ -398,21 +426,29 @@ app:
         chamber_temp: Chamber temp
         end_time: Ended
         estimated_time: Estimated time
-        filament: Filament
+        extruder_colors: Extruder colors
+        filament_change_count: Filament changes
+        filament_colors: Filament colors
         filament_name: Filament name
+        filament_temps: Filament temps
         filament_type: Filament type
         filament_used: Used filament
         filament_weight_total: Filament weight
+        filament_weights: Filament weights
+        filament: Filament
+        file_processors: File processors
         first_layer_bed_temp: First layer bed temp
         first_layer_extr_temp: First layer extruder temp
         first_layer_height: First layer height
         height: Height
         last_printed: Last printed
         layer_height: Layer height
+        mmu_print: MMU print
         modified: Modified
         name: Name
         nozzle_diameter: Nozzle diameter
         print_duration: Print duration
+        referenced_tools: Referenced tools
         time_added: Time Added
         time_in_queue: Time In Queue
         size: Size
@@ -421,9 +457,11 @@ app:
         start_time: Started
         status: Status
         total_duration: Total duration
+        user: User
     title:
       add_chart: Add Chart
       add_printer: Add Printer
+      beacon: Beacon
       bedmesh: Bed Mesh
       bedmesh_controls: Bed Mesh Controls
       camera: Camera | Cameras
@@ -440,6 +478,7 @@ app:
       jobs: Jobs
       job_queue: Job Queue
       limits: Printer Limits
+      login: Login
       macros: Macros
       metrics_explorer: Metrics Explorer
       not_found: 404 Not Found
@@ -449,6 +488,7 @@ app:
       rollover_logs: Rollover logs
       runout_sensors: Runout Sensors
       settings: Settings
+      macro_category_settings: Macro Category Settings
       stats: Printer Stats
       system: System
       system_overview: System Information
@@ -459,13 +499,18 @@ app:
     tooltip:
       browse_metrics: Browse available metrics
       estop: Emergency Stop
+      exit_layout: Exit layout mode
       managed_by_moonraker: Managed by your moonraker configuration
       notifications: Notifications
+      power_on_printer: Turns on the power to the printer
       reload_klipper: Reloads klipper configuration.
       reload_restart_klipper: Reloads klipper configuration and restarts MCU's.
+      reset_layout: Reset current layout to server-wide default layout
+      reset_default_layout: Reset server-wide default layout to factory defaults
       restart_klipper: Restarts the klipper system service.
       run_collector: Run collector
       rollover_logs: Rollover logs
+      set_default_layout: Set current layout as server-wide default layout
       file_browser_help: >-
         Drag and drop files or folders from outside the browser to upload them here<br>Move files and folders by dragging and dropping them onto sub-folders or ".."
       file_browser_configuration_help: >-
@@ -479,7 +524,11 @@ app:
     msg:
       confirm: Are you sure? This will clear the entire printer queue
     label:
+      eta: ETA
+      filament: Filament
       number_of_copies: Number of copies
+      print_time: Print time
+      unknown_jobs: Unknown jobs
     title:
       multiply_job: Multiply Job | Multiply Jobs
     tooltip:
@@ -538,6 +587,7 @@ app:
       auto_follow_on_file_load: Automatically follow progress on file load
       auto_load_on_print_start: Automatically load file on print start
       auto_load_mobile_on_print_start: Automatically load file on mobile devices
+      auto: Auto
       axes: Axes
       camera_flip_x: Flip horizontally
       camera_flip_y: Flip vertically
@@ -573,6 +623,7 @@ app:
       enable_xy_homing: Enable XY Homing
       expression: Expression
       extrusion_line_width: Extrusion Line Width
+      firmware_restart: Firmware Restart
       flip_horizontal: Horizontal Flip
       flip_vertical: Vertical Flip
       fill_color: Fill color
@@ -584,11 +635,13 @@ app:
       height: Height
       hide_single_part_bounding_box: Hide part bounding box when printing a single part
       gcode_coords: Use GCode Coordinates
+      host_restart: Host Restart
       icon: Icon
       invert_x_control: Invert X control
       invert_y_control: Invert Y control
       invert_z_control: Invert Z control
       keyboard_shortcuts: Keyboard shortcuts
+      klipper_save_and_restart_action: Klipper Save & Restart action
       language: Display Language
       last_result: Last result
       left_y: Left Y-Axis
@@ -608,11 +661,13 @@ app:
       print_in_progress_layout: Print in Progress layout
       print_progress_calculation: Print Progress calculation
       printer_name: Printer Name
+      printer_power_device: Printer power device
       reset: Reset settings
       retraction_icon_size: Retraction Icon Size
       right_y: Right Y-Axis
       save_and_restore_view_state: Save and restore view state
       sections_to_ignore_pending_configuration_changes: Sections to ignore Pending Configuration Changes
+      service_restart: Service Restart
       show_animations: Show animations
       show_barometric_pressure: Show barometric pressure
       show_chart: Show chart
@@ -642,6 +697,7 @@ app:
       date_format: Date format
       time_format: Time format
       text_sort_order: Text sort order
+      drag_and_drop_functionality_for_files_and_folders: Drag-and-drop functionality for files and folders
       force_move_toggle_warning: Require confirm when activating FORCE_MOVE
       show_manual_probe_dialog_automatically: Show Manual Probe dialog automatically
       show_bed_screws_adjust_dialog_automatically: Show Bed Screws Adjust dialog automatically
@@ -687,11 +743,14 @@ app:
       no_connection: No moonraker connection. Please check moonraker status and / or refresh.
   system_info:
     label:
+      application: Application
       awake_time: awake time
       capacity: Capacity
+      connected: Connected
       constants: Constants
       cpu_desc: CPU Description
       devices: Devices
+      disconnected: Disconnected
       distribution_codename: Codename
       distribution_like: Distribution Like
       distribution_name: Distribution
@@ -712,6 +771,7 @@ app:
       moonraker_load: Moonraker Load
       last_stats: Last Stats
       network: Network
+      non_critical_connection: Non-critical connection
       processor_desc: Processor
       product_name: Product Name
       serial_number: Serial Number
@@ -726,7 +786,7 @@ app:
       canbus_warning: >-
         Only unassigned CAN bus nodes can be detected.<br>
         It is recommended to have only one unassigned device connected to the CAN bus to avoid communication issues.<br>
-        More information can be found <a target="_blank" href="https://moonraker.readthedocs.io/en/latest/web_api/#query-unassigned-canbus-uuids">here.</a>
+        More information can be found <a target="_blank" href="https://moonraker.readthedocs.io/en/latest/external_api/machine/#query-unassigned-canbus-uuids">here.</a>
       no_devices_found: No devices found
       no_devices_searched: Use the refresh button to search for devices
   tool:
@@ -860,20 +920,33 @@ app:
       scan_spool: Scan Spool
     label:
       active_spool: Active Spool
+      bed_temp: Bed Temp
       change_spool: Change Spool
+      colors: Colors
       comment: Comment
+      density: Density
       device_camera: Device
+      diameter: Diameter
+      extruder_temp: Extruder Temp
       filament_name: Filament
       first_used: First Used
       id: ID
+      initial_length: Initial Length
+      initial_weight: Initial Weight
       last_used: Last Used
+      length: Length
       location: Location
       lot_nr: Lot Nr
       material: Material
-      remaining_weight: Remaining
+      price: Price
+      remaining_length: Remaining Length
+      remaining_weight: Remaining Weight
+      remaining: Remaining
+      used_length: Used Length
+      used_weight: Used Weight
+      used: Used
       vendor: Vendor
       weight: Weight
-      length: Length
     msg:
       no_spool: >-
         You haven't selected a spool.
@@ -910,6 +983,7 @@ app:
     setting:
       auto_open_qr_camera: Automatically open camera for QR code detection
       auto_select_spool_on_match: Automatically commit spool selection on QR code match
+      card_fields: Fields to show in the Spoolman card
       prefer_device_camera: Use device camera for QR code detection if available
       show_spool_selection_dialog_on_print_start: Show spool selection dialog on print start
       warn_on_not_enough_filament: >-
@@ -917,6 +991,131 @@ app:
       warn_on_filament_type_mismatch: >-
         Show a warning when the spool's filament type and the one selected in the slicer don't match
       remaining_filament_unit: Show remaining filament as
+  mmu:
+    btn:
+      check_all_gates: Check All Gates
+      check_gate: Check Gate
+      select: Select
+      eject: Eject
+      load: Load
+      load_ext: Load Ext
+      unload: Unload
+      unload_ext: Unload Ext
+      preload: Preload
+      print_stats: Print Stats
+      recover: Recover
+      sync_spoolman: Sync Spoolman
+      unlock: Unlock
+      cancel: Cancel
+      mmu_maintenance: MMU Maintenance
+      recover_state: Fix MMU State
+      edit_gate_map: Edit Filaments
+      edit_ttg_map: Map Tools / Filaments
+      sync: Sync
+      unsync: Unsync
+      off: Off
+      on: On
+      home: Home
+      up: Up
+      down: Down
+      move: Move
+      grip: Grip
+      release: Release
+      reset: Reset
+    title:
+      headline: Mmu
+      mmu_maintenance: MMU Maintenance
+      recover_state: Fix MMU State (Error Recover)
+      edit_gate_map: Edit Filaments (Edit Gate Map)
+      edit_ttg_map: Map Tools / Filaments (Edit TTG Map)
+    label:
+      clog_detection: Clog Detection
+      tool_mapping: Tool Mapping
+      spoolman: Spoolman
+      spoolman_id: Spoolman ID
+      choose_spool: Choose Spool
+      filament_name: Filament Name
+      load_speed: Load speed override
+      material: Material
+      reset: Reset
+      temperature: Temperature
+      motor_sync: Extruder Motor Sync
+      extruder_only: Extruder Only
+      mmu_motors: MMU Motors
+      extruder_tx: Tools Tx
+      selector: Selector
+      leds: LEDs
+      ui_visual: UI Visual
+      animation: Animation
+      config: Config
+      enable: Enable
+      unknown: Unknown
+      skip_automap: Skip Automap
+      all_tools: All Tools
+      ok: Ok
+      save: Save
+      cancel: Cancel
+      gate: Gate
+      endless_spool: ES ∞
+      filament_info: Filament Information
+      slicer_expects: Slicer Expects
+      spoolman_last_used: Last Used
+      spoolman_never: Never
+      spoolman_today: Today
+      spoolman_yesterday: Yesterday
+      spoolman_days_ago: '%{days} days ago'
+    tooltip:
+      empty: Empty
+      color: Color
+      spoolid: Spool ID
+    msg:
+      reset_gate_map_confirmation: This will reset the entire gate map back to the default defined in 'mmu_parameters.cfg' or empty map if no defaults are available
+      reset_ttg_map_confirmation: This will reset the entire tool-to-gate mapping and endless spool groups back to the default defined in 'mmu_parameters.cfg' or default 1:1 mapping in no defaults are available
+      select_gate: Select gate/spool info you would like to edit
+      spoolman_off: Spoolman support is "%{mode}" in Happy Hare. Assigning spool id to a gate is disabled
+      spoolman_other: Spoolman support is "%{mode}". You can optionally assign a spool id or edit gate attributes directly
+      spoolman_pull: Spoolman support is in "%{mode}" mode. Local editing of most gate properties is disabled. Assign spool/gate mapping in spoolman DB directly or use the MMU_SPOOLMAN command
+      no_matching_spool: No matching spool found
+      are_you_sure: Are you sure?
+      bad_temperature: Temperature out of range
+      filament_available: Filament available in gate
+      filament_unknown: Unknown filament state (please set)
+      filament_empty: Filament not available
+      maintenance_intro: Directly manage specific MMU functions and selective configuration.
+      recover_intro: This is a low level recovery for use when Happy Hare is out of sync with your MMU. It is recommended to try automatic recovery first however this will be required to correct the current tool or gate (Alternatively on Type-A MMU's you can unload and home the selector).
+      no_custom_controls: No Custom Controls
+      filament_loaded: Is the filament completely loaded to the extruder or completely unloaded?
+      gate_bypass: Gate is set to Bypass!
+      no_gate: A gate must be selected
+      no_position: Attempt to recover position
+      no_tool: A tool must be selected
+      remap: This will remap gate to %{tool}
+      set_gate: Set to the current gate
+      set_tool: Set to the current tool
+      tool_bypass: Tool is set to Bypass!
+      warning_prefix: Warning-
+      no_active_spool: No active spool
+      no_spool_id: No spool ID
+      recover_filament_position: Recover Filament Position
+      multi_color: This looks like a Multi Material Single Extruder print using %{numTools} tools. You should probably review tool mapping
+      single_color: This looks like a single color print but you don't have the bypass selected on your MMU. You may want to check the chosen tool
+      map_slicer_tools: Map slicer tools to MMU gates for print
+      map_tools: Map tools to MMU gates
+      tool_not_used: Tool %{tool} not used in this print, choose default mapping
+      mismatch: Possible filament mismatch
+      color: Color
+      material: Material
+      temperature: Temperature
+      no_gate_data: No gate data
+      no_slicer_info: No slicer information, choose default mapping for %{tool}
+      select_tool: Select Tool to map then choose gate from list
+    setting:
+      large_filament_status: Large Filament Status
+      show_clog_detection: Show Clog Detection
+      show_details: Show Filament Details
+      show_ttg_map: Show TTG Map
+      show_logos: Show Logos
+      show_unavailable_spool_color: Show Unavailable Spools
   sensors:
     title:
       sensors: Sensors
@@ -933,3 +1132,16 @@ app:
       pause: Pause
       printing: Printing
       tool: Tool
+  beacon:
+    label:
+      active: active
+      model_name: Model Name
+      remove_model: Remove %{name} model
+    msg:
+      hint: >-
+        If saving as something other than %{name}, you can choose to also remove
+        the %{name} model
+      not_found: No existing beacon models found.
+    tooltip:
+      delete: Delete Model
+      load: Load Model

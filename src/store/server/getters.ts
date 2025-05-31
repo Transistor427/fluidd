@@ -1,41 +1,20 @@
 import type { GetterTree } from 'vuex'
-import type { ServerInfo, ServerConfig, ServerState, SystemInfo, ServerSystemStat, ServiceInfo, ServiceState } from './types'
+import type { ServerState, ServiceInfo, ServiceState } from './types'
 import type { RootState } from '../types'
 import { Globals } from '@/globals'
 import { gte, valid } from 'semver'
+import type { KlippyApp } from '../printer/types'
 
-export const getters: GetterTree<ServerState, RootState> = {
-  /**
-   * Get's the current server info
-   */
-  getInfo: (state): ServerInfo => {
-    return state.info
-  },
-
-  getIsMinApiVersion: (state) => (minVersion: string) => {
+export const getters = {
+  getIsMinApiVersion: (state) => (minVersion: string): boolean => {
     const apiVersion = state.info.api_version_string
-    return apiVersion && valid(apiVersion) && valid(minVersion) && gte(apiVersion, minVersion)
-  },
 
-  /**
-   * Gets the current system info
-   */
-  getSystemInfo: (state): SystemInfo | null => {
-    return state.system_info
-  },
-
-  /**
-   * Return server config
-   */
-  getConfig: (state): ServerConfig => {
-    return state.config
-  },
-
-  /**
-   * Return server process stats
-   */
-  getProcessStats: (state): ServerSystemStat[] => {
-    return state.moonraker_stats
+    return !!(
+      apiVersion &&
+      valid(apiVersion) &&
+      valid(minVersion) &&
+      gte(apiVersion, minVersion)
+    )
   },
 
   /**
@@ -86,7 +65,7 @@ export const getters: GetterTree<ServerState, RootState> = {
       item?.service === 'klipper' &&
       item.link
     ) {
-      const klippyApp = rootGetters['printer/getKlippyApp']
+      const klippyApp: KlippyApp = rootGetters['printer/getKlippyApp']
 
       item.link = item.link.replace('{klipperDomain}', klippyApp.domain)
     }
@@ -96,11 +75,9 @@ export const getters: GetterTree<ServerState, RootState> = {
       const instanceIds = rootState.server.system_info?.instance_ids
 
       return {
-        serviceSupported: (instanceIds && itemService in instanceIds) || getters.getServices.some((i: ServiceInfo) => i.name === itemService),
+        serviceSupported: (instanceIds && itemService in instanceIds) || (getters.getServices as ServiceInfo[]).some(i => i.name === itemService),
         ...item
       }
     }
-
-    return {}
   }
-}
+} satisfies GetterTree<ServerState, RootState>

@@ -4,12 +4,10 @@
       <app-btn
         fab
         small
-        color=""
         class="mr-4"
-        exact
         @click="handleBack"
       >
-        <v-icon small>
+        <v-icon dense>
           $left
         </v-icon>
       </app-btn>
@@ -25,7 +23,9 @@
         dense
         single-line
         hide-details
+        spellcheck="false"
         append-icon="$magnify"
+        @focus="$event.target.select()"
       />
     </v-subheader>
     <v-card
@@ -57,10 +57,7 @@
       <app-draggable
         v-model="macros"
         :options="{
-          animation: 200,
-          handle: '.handle',
           group: `macro-settings-${category.name}`,
-          ghostClass: 'ghost'
         }"
       >
         <section
@@ -75,18 +72,12 @@
             @click="handleSettingsDialog(macro)"
           >
             <template #title>
-              <v-icon
-                class="handle"
-                left
-              >
-                $drag
-              </v-icon>
-
+              <app-drag-icon class="me-1" />
               {{ macro.name.toUpperCase() }}
             </template>
 
             <template
-              v-if="macro.config.description && macro.config.description !== 'G-Code macro'"
+              v-if="macro.config?.description && macro.config.description !== 'G-Code macro'"
               #sub-title
             >
               <span class="ml-1 mr-2">
@@ -125,10 +116,10 @@ import type { NavigationGuardNext, Route, Location } from 'vue-router'
 const routeGuard = (to: Route): Parameters<NavigationGuardNext>[0] => {
   // No need to translate here, these are just used for the route.
   const id = to.params.categoryId
-  const categories = store.getters['macros/getCategories']
-  const i = categories.findIndex((c: MacroCategory) => c.id === id)
+  const categories: MacroCategory[] = store.getters['macros/getCategories']
+  const i = categories.findIndex(c => c.id === id)
   if (id !== '0' && i === -1) {
-    return { path: '/settings', hash: 'macros' } satisfies Location
+    return { name: 'settings', hash: '#macros' } satisfies Location
   }
 }
 
@@ -146,20 +137,29 @@ export default class MacroCategorySettings extends Vue {
     macro: null
   }
 
-  get macros () {
+  get macrosForCategory (): Macro[] {
     const id = this.categoryId
-    const macros = this.$store.getters['macros/getMacrosByCategory'](id)
-      .filter((macro: Macro) => !this.search ? true : macro.name.includes(this.search.toLowerCase()))
 
-    return macros
+    return this.$typedGetters['macros/getMacrosByCategory'](id)
+  }
+
+  get macros () {
+    if (!this.search) {
+      return this.macrosForCategory
+    }
+
+    const search = this.search.toLowerCase()
+
+    return this.macrosForCategory
+      .filter(macro => macro.name.toLowerCase().includes(search))
   }
 
   set macros (macros: Macro[]) {
-    this.$store.dispatch('macros/saveAllOrder', macros)
+    this.$typedDispatch('macros/saveAllOrder', macros)
   }
 
   get categories (): MacroCategory[] {
-    return this.$store.getters['macros/getCategories']
+    return this.$typedGetters['macros/getCategories']
   }
 
   get category () {
@@ -170,11 +170,11 @@ export default class MacroCategorySettings extends Vue {
     }
   }
 
-  beforeRouteEnter (to: Route, from: Route, next: NavigationGuardNext<Vue>) {
+  beforeRouteEnter (to: Route, from: Route, next: NavigationGuardNext) {
     next(routeGuard(to))
   }
 
-  beforeRouteUpdate (to: Route, from: Route, next: NavigationGuardNext<Vue>) {
+  beforeRouteUpdate (to: Route, from: Route, next: NavigationGuardNext) {
     next(routeGuard(to))
   }
 
@@ -188,23 +188,25 @@ export default class MacroCategorySettings extends Vue {
   }
 
   handleSettingsDialog (macro: Macro) {
-    this.dialogState.macro = macro
-    this.dialogState.open = true
+    this.dialogState = {
+      open: true,
+      macro: { ...macro }
+    }
   }
 
   handleAllOn () {
-    this.$store.dispatch('macros/saveAllOn', this.macros)
+    this.$typedDispatch('macros/saveAllOn', this.macros)
   }
 
   handleAllOff () {
-    this.$store.dispatch('macros/saveAllOff', this.macros)
+    this.$typedDispatch('macros/saveAllOff', this.macros)
   }
 
   handleMacroVisible (macro: Macro, value: boolean) {
     const newMacro = {
       ...macro, visible: value
     }
-    this.$store.dispatch('macros/saveMacro', newMacro)
+    this.$typedDispatch('macros/saveMacro', newMacro)
   }
 }
 </script>

@@ -12,9 +12,8 @@
       v-model="inputValue"
       class="mt-0"
       :disabled="disabled || loading"
-      :true-value="trueValue"
-      :false-value="falseValue"
       hide-details
+      v-bind="$attrs"
       v-on="$listeners"
     />
   </v-layout>
@@ -23,10 +22,12 @@
 <script lang="ts">
 import { Component, Prop, Vue, VModel } from 'vue-property-decorator'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppNamedSwitch extends Vue {
   @VModel({ type: Boolean })
-    inputValue?: boolean
+  inputValue?: boolean
 
   @Prop({ type: String, required: true })
   readonly label!: string
@@ -36,11 +37,5 @@ export default class AppNamedSwitch extends Vue {
 
   @Prop({ type: Boolean })
   readonly loading?: boolean
-
-  @Prop({ })
-  readonly trueValue?: unknown
-
-  @Prop({ })
-  readonly falseValue?: unknown
 }
 </script>

@@ -6,7 +6,7 @@ import { httpClientActions } from '@/api/httpClientActions'
 import router from '@/router'
 import { consola } from 'consola'
 
-export const actions: ActionTree<AuthState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
@@ -191,7 +191,9 @@ export const actions: ActionTree<AuthState, RootState> = {
     if (!opts.partial) {
       if (Vue.$socket) Vue.$socket.close()
       commit('setAuthenticated', false)
-      if (router.currentRoute.path !== '/login') router.push('/login')
+      if (router.currentRoute.name !== 'login') {
+        await router.push({ name: 'login' })
+      }
     }
   },
 
@@ -252,4 +254,4 @@ export const actions: ActionTree<AuthState, RootState> = {
 
     commit('setApiKey', key)
   }
-}
+} satisfies ActionTree<AuthState, RootState>

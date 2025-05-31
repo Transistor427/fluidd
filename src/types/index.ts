@@ -2,8 +2,10 @@ import type { FileSystemDialogData, NewDirectory } from './dialogs'
 import type { FileWithPath } from './files'
 import type { FlashMessage, FlashMessageTypes } from './flashmessage'
 import type { MeshData } from './mesh'
-import type { AppTableHeader } from './tableheaders'
+import type { AppDataTableHeader } from './tableheaders'
 import type { VForm, VInput, VTextArea, VSlider } from './vuetify'
+import type { CameraConnectionStatus, CameraNameMenuItem } from './cameras'
+import type { MmuGateDetails, SlicerToolDetails, MmuUnitDetails } from './mmu'
 
 export type {
   FileSystemDialogData,
@@ -11,10 +13,15 @@ export type {
   FlashMessage,
   FlashMessageTypes,
   MeshData,
-  AppTableHeader,
+  AppDataTableHeader,
   VForm,
   VInput,
   VTextArea,
   VSlider,
-  FileWithPath
+  FileWithPath,
+  CameraConnectionStatus,
+  CameraNameMenuItem,
+  MmuGateDetails,
+  SlicerToolDetails,
+  MmuUnitDetails
 }

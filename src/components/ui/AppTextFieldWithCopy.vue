@@ -1,8 +1,8 @@
 <template>
   <v-text-field
     v-model="inputValue"
-    v-bind="$attrs"
     class="app-text-field"
+    v-bind="$attrs"
     v-on="$listeners"
   >
     <template #append-outer>
@@ -12,10 +12,9 @@
         bottom
       >
         <template #activator="{ on, attrs }">
-          <v-btn
+          <app-btn
             v-bind="attrs"
             icon
-            text
             class="btn-copy"
             @click="handleCopy"
             v-on="on"
@@ -23,12 +22,13 @@
             <v-fade-transition leave-absolute>
               <v-icon
                 :key="hasCopied"
+                dense
                 class="icon-copy"
               >
                 {{ hasCopied ? '$check' : '$contentCopy' }}
               </v-icon>
             </v-fade-transition>
-          </v-btn>
+          </app-btn>
         </template>
         <span>{{ hasCopied ? $t('app.general.btn.copied') : $t('app.general.btn.copy') }}</span>
       </v-tooltip>
@@ -38,26 +38,34 @@
 
 <script lang="ts">
 import { Component, VModel, Vue } from 'vue-property-decorator'
+import clipboardCopy from '@/util/clipboard-copy'
+import sleep from '@/util/sleep'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppTextFieldWithCopy extends Vue {
   @VModel()
-    inputValue!: unknown
+  inputValue!: unknown
 
   hasCopied = false
+  abortController: AbortController | null = null
 
-  handleCopy () {
-    if (
-      this.inputValue &&
-      navigator.clipboard
-    ) {
-      navigator.clipboard.writeText(this.inputValue.toString())
+  async handleCopy () {
+    if (this.inputValue) {
+      if (await clipboardCopy(this.inputValue.toString(), this.$el)) {
+        this.abortController?.abort()
 
-      this.hasCopied = true
+        this.hasCopied = true
 
-      setTimeout(() => {
-        this.hasCopied = false
-      }, 2000)
+        try {
+          const abortController = this.abortController = new AbortController()
+
+          await sleep(2000, abortController.signal)
+
+          this.hasCopied = false
+        } catch {}
+      }
     }
   }
 }

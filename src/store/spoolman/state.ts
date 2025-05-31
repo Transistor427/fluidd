@@ -1,9 +1,11 @@
-import type { SpoolmanState } from '@/store/spoolman/types'
+import type { SpoolmanState } from './types'
 
 export const defaultState = (): SpoolmanState => {
   return {
-    availableSpools: [],
-    activeSpool: undefined,
+    info: null,
+    spools: [],
+    activeSpool: null,
+    currency: null,
     connected: false,
     dialog: {
       show: false

@@ -2,14 +2,14 @@ import type { GetterTree } from 'vuex'
 import type { ConsoleState, GcodeHelp } from './types'
 import type { RootState } from '../types'
 
-const _tempWaitExpr = /^(?:ok\s+)?(b|t\d+):\d+\.\d+ \/\d+\.+\d+/i
+const _tempWaitExpr = /^(?:ok\s+)?(?:b|t\d+):\d+\.\d+ \/\d+\.+\d+/i
 
-export const getters: GetterTree<ConsoleState, RootState> = {
+export const getters = {
   /**
    * Return a list of all available console entries, filtered appropriately.
    */
   getConsoleEntries: (state, getters, rootState) => {
-    const hideTempWaits = rootState.config.uiSettings.general.hideTempWaits || true
+    const hideTempWaits = rootState.config.uiSettings.general.hideTempWaits
 
     const items = state.console.filter(entry => {
       return (!entry.time || entry.time * 1000 > state.lastCleared) &&
@@ -18,10 +18,6 @@ export const getters: GetterTree<ConsoleState, RootState> = {
     })
 
     return items
-  },
-
-  getFilters: (state) => {
-    return state.consoleFilters
   },
 
   getAllKnownCommands: (state): GcodeHelp => {
@@ -35,4 +31,4 @@ export const getters: GetterTree<ConsoleState, RootState> = {
 
     return commands
   }
-}
+} satisfies GetterTree<ConsoleState, RootState>

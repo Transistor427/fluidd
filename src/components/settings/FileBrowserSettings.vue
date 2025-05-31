@@ -17,21 +17,34 @@
           :items="availableTextSortOrders"
         />
       </app-setting>
+
+      <v-divider />
+
+      <app-setting
+        :title="$t('app.setting.label.drag_and_drop_functionality_for_files_and_folders')"
+      >
+        <v-switch
+          v-model="filesAndFoldersDragAndDrop"
+          hide-details
+          @click.native.stop
+        />
+      </app-setting>
     </v-card>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
+import type { TextSortOrder } from '@/store/config/types'
 
 @Component({})
 export default class FileEditorSettings extends Vue {
-  get textSortOrder () {
-    return this.$store.state.config.uiSettings.general.textSortOrder
+  get textSortOrder (): TextSortOrder {
+    return this.$typedState.config.uiSettings.general.textSortOrder
   }
 
-  set textSortOrder (value: string) {
-    this.$store.dispatch('config/saveByPath', {
+  set textSortOrder (value: TextSortOrder) {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.textSortOrder',
       value,
       server: true
@@ -53,6 +66,18 @@ export default class FileEditorSettings extends Vue {
         text: this.$t('app.general.label.version_sort')
       }
     ]
+  }
+
+  get filesAndFoldersDragAndDrop (): boolean {
+    return this.$typedState.config.uiSettings.general.filesAndFoldersDragAndDrop
+  }
+
+  set filesAndFoldersDragAndDrop (value: boolean) {
+    this.$typedDispatch('config/saveByPath', {
+      path: 'uiSettings.general.filesAndFoldersDragAndDrop',
+      value,
+      server: true
+    })
   }
 }
 </script>

@@ -3,6 +3,7 @@ import { Globals } from '@/globals'
 
 export const defaultState = (): ConfigState => {
   return {
+    appReady: false,
     apiUrl: '',
     socketUrl: '',
     layoutMode: false,
@@ -48,6 +49,7 @@ export const defaultState = (): ConfigState => {
         timeFormat: 'iso',
         enableKeyboardShortcuts: true,
         textSortOrder: 'default',
+        filesAndFoldersDragAndDrop: true,
         showRateOfChange: false,
         showRelativeHumidity: true,
         showBarometricPressure: true,
@@ -56,6 +58,7 @@ export const defaultState = (): ConfigState => {
         showUploadAndPrint: true,
         flipConsoleLayout: false,
         cameraFullscreenAction: 'embed',
+        printerPowerDevice: null,
         topNavPowerToggle: null,
         showManualProbeDialogAutomatically: true,
         showBedScrewsAdjustDialogAutomatically: true,
@@ -65,7 +68,6 @@ export const defaultState = (): ConfigState => {
         printProgressCalculation: ['file'],
         printEtaCalculation: ['file'],
         enableDiagnostics: false,
-        thumbnailSize: 32,
         colorPickerValueRange: 'absolute'
       },
       theme: {
@@ -80,50 +82,14 @@ export const defaultState = (): ConfigState => {
         confirmDirtyEditorClose: true,
         autoEditExtensions: ['.cfg', '.conf', '.ini', '.log', '.sh', '.txt'],
         restoreViewState: 'session',
-        codeLens: true
+        codeLens: true,
+        klipperSaveAndRestartAction: 'auto'
       },
       dashboard: {
         tempPresets: []
       },
-      tableHeaders: {
-        gcodes_dashboard: [
-          { value: 'first_layer_extr_temp', visible: false },
-          { value: 'first_layer_bed_temp', visible: false },
-          { value: 'chamber_temp', visible: false },
-          { value: 'history.total_duration', visible: false },
-          { value: 'history.print_duration', visible: false },
-          { value: 'estimated_time', visible: false },
-          { value: 'nozzle_diameter', visible: false },
-          { value: 'slicer_version', visible: false },
-          { value: 'slicer', visible: false },
-          { value: 'history.filament_used', visible: false },
-          { value: 'filament_name', visible: false },
-          { value: 'filament_type', visible: false },
-          { value: 'filament_total', visible: false },
-          { value: 'filament_weight_total', visible: false },
-          { value: 'object_height', visible: false },
-          { value: 'first_layer_height', visible: false },
-          { value: 'layer_height', visible: false }
-        ],
-        gcodes_jobs: [
-          { value: 'first_layer_height', visible: false },
-          { value: 'history.filament_used', visible: false },
-          { value: 'slicer_version', visible: false },
-          { value: 'history.print_duration', visible: false },
-          { value: 'chamber_temp', visible: false },
-          { value: 'first_layer_extr_temp', visible: false },
-          { value: 'first_layer_bed_temp', visible: false }
-        ],
-        history: [
-          { value: 'print_duration', visible: false },
-          { value: 'filament_used', visible: false }
-        ],
-        job_queue: [
-          { value: 'time_added', visible: true },
-          { value: 'time_in_queue', visible: false }
-        ],
-        spoolman: []
-      },
+      tableHeaders: {},
+      thumbnailSizes: {},
       gcodePreview: {
         extrusionLineWidth: 0.3,
         moveLineWidth: 0.1,
@@ -140,7 +106,15 @@ export const defaultState = (): ConfigState => {
         flip: {
           horizontal: false,
           vertical: true
-        }
+        },
+        showCurrentLayer: true,
+        showNextLayer: false,
+        showPreviousLayer: false,
+        showMoves: true,
+        showExtrusions: true,
+        showRetractions: true,
+        showParts: true,
+        followProgress: false
       },
       fileSystem: {
         activeFilters: {},
@@ -148,7 +122,6 @@ export const defaultState = (): ConfigState => {
         sortDesc: {}
       },
       toolhead: {
-        forceMove: false,
         extrudeSpeed: -1,
         extrudeLength: -1
       },
@@ -163,7 +136,20 @@ export const defaultState = (): ConfigState => {
           key: 'last_used',
           desc: false
         },
-        remainingFilamentUnit: 'weight'
+        remainingFilamentUnit: 'weight',
+        selectedCardFields: ['vendor', 'filament_name', 'remaining_weight', 'location', 'material', 'lot_nr', 'first_used', 'comment']
+      },
+      history: {
+        timeInDays: false,
+        lengthInKilometers: false
+      },
+      mmu: {
+        showClogDetection: true,
+        showTtgMap: true,
+        showDetails: true,
+        largeFilamentStatus: false,
+        showLogos: false,
+        showUnavailableSpoolColor: false
       }
     }
   }

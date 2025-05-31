@@ -38,8 +38,6 @@ app:
       auto_scroll: Rol outomaties aan
       flip_layout: Keer uitleg om
       hide_temp_waits: Versteek temp. wagtye
-    placeholder:
-      command: '''tab'' vir outo-voltooi, ''help'' vir opdragte ''pyltjies'' vir geskiedenis'
   endpoint:
     error:
       cant_connect: >-
@@ -51,7 +49,7 @@ app:
         die dokumentasie vir multi-drukker opstellings <a href="%{url}"
         target="_blank">here</a>
     hint:
-      add_printer: Bv., http://fluiddpi.local
+      add_printer: Bv., http://fluidd.local
     msg:
       trouble: >-
         Sukkel jy? <a href="%{url}" target="_blank">Sien hier</a> vir meer
@@ -61,16 +59,17 @@ app:
         Voer jou API URL in.<br />Hier is voorbeelde;<br
         /><blockquote>fluidd.local, https://192.168.1.150</blockquote>
   endstop:
-    label:
-      open: OOP
-      triggered: GESNELLER
+    states:
+      label:
+        open: OOP
+        triggered: GESNELLER
     msg:
       subtitle: Gebruik die vervrisknop om die endstop status op te dateer.
   file_system:
     filters:
       label:
         print_start_time: Filter druktyd.
-        hidden_files_folders: Filter versteekte lêers and vouers.
+        hidden_files: Filter versteekte lêers and vouers.
         klipper_backup_files: Filter Klipper rugsteunlêers.
         rolled_log_files: Filter log-lêers wat oorgeslaan het.
     label:

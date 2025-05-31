@@ -4,7 +4,7 @@
     dense
     icon="$warning"
     type="warning"
-    class="mb-0"
+    class="ma-0"
   >
     <template v-if="printerWarnings.length > 0">
       <div class="mb-2">
@@ -14,7 +14,7 @@
         <li
           v-for="(warning, index) in printerWarnings"
           :key="index"
-          v-html="linkExternalUrls(warning.message)"
+          v-html="linkExternalUrls(warning)"
         />
       </ul>
     </template>
@@ -72,6 +72,7 @@ import { Component, Mixins } from 'vue-property-decorator'
 import StateMixin from '@/mixins/state'
 import { Globals } from '@/globals'
 import linkExternalUrls from '@/util/link-external-urls'
+import type { KlipperPrinterConfigFileWarningState } from '@/store/printer/types'
 
 @Component({
   components: {}
@@ -101,20 +102,20 @@ export default class AppWarnings extends Mixins(StateMixin) {
     return Globals.APP_NAME
   }
 
-  get printerWarnings () {
-    return this.$store.getters['printer/getPrinterWarnings']
+  get printerWarnings (): string[] {
+    return this.$typedGetters['printer/getPrinterWarnings']
   }
 
-  get klipperWarnings () {
-    return this.$store.getters['printer/getKlipperWarnings']
+  get klipperWarnings (): KlipperPrinterConfigFileWarningState[] {
+    return this.$typedGetters['printer/getKlipperWarnings']
   }
 
-  get moonrakerFailedComponents () {
-    return this.$store.getters['printer/getMoonrakerFailedComponents']
+  get moonrakerFailedComponents (): string[] {
+    return this.$typedGetters['printer/getMoonrakerFailedComponents']
   }
 
-  get moonrakerWarnings () {
-    return this.$store.getters['printer/getMoonrakerWarnings']
+  get moonrakerWarnings (): string[] {
+    return this.$typedGetters['printer/getMoonrakerWarnings']
   }
 
   linkExternalUrls = linkExternalUrls

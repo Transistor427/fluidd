@@ -6,7 +6,7 @@ import { SocketActions } from '@/api/socketActions'
 import DOMPurify from 'dompurify'
 import { takeRightWhile } from 'lodash-es'
 
-export const actions: ActionTree<ConsoleState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
@@ -43,7 +43,7 @@ export const actions: ActionTree<ConsoleState, RootState> = {
    * Add a console entry
    */
   async onAddConsoleEntry ({ commit, dispatch }, payload: ConsoleEntry) {
-    payload.message = DOMPurify.sanitize(payload.message).replace(/(?:\r\n|\r|\n)/g, '<br />')
+    payload.message = DOMPurify.sanitize(payload.message).replace(/\r\n|\r|\n/g, '<br />')
     if (!payload.time || payload.time <= 0) {
       payload.time = Date.now() / 1000 | 0
     }
@@ -68,7 +68,7 @@ export const actions: ActionTree<ConsoleState, RootState> = {
         .map((entry, index: number) => {
           entry.message = Globals.CONSOLE_RECEIVE_PREFIX + entry.message
 
-          entry.message = DOMPurify.sanitize(entry.message).replace(/(?:\r\n|\r|\n)/g, '<br />')
+          entry.message = DOMPurify.sanitize(entry.message).replace(/\r\n|\r|\n/g, '<br />')
 
           entry.id = index
 
@@ -193,4 +193,4 @@ export const actions: ActionTree<ConsoleState, RootState> = {
     commit('setLastCleared')
     SocketActions.serverWrite(Globals.MOONRAKER_DB.fluidd.ROOTS.console.name + '.lastCleared', state.lastCleared)
   }
-}
+} satisfies ActionTree<ConsoleState, RootState>

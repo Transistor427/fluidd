@@ -1,16 +1,14 @@
 import Vue from 'vue'
 import type { MutationTree } from 'vuex'
-import type { ConfigState, UiSettings, SaveByPath, InstanceConfig, InitConfig } from './types'
+import type { ConfigState, UiSettings, SaveByPath, InstanceConfig, InitConfig, ConfiguredTableHeader } from './types'
 import { defaultState } from './state'
 import { Globals } from '@/globals'
 import { cloneDeep, mergeWith, set } from 'lodash-es'
 import { v4 as uuidv4 } from 'uuid'
-import type { AppTableHeader } from '@/types'
-import type { AppTablePartialHeader } from '@/types/tableheaders'
 import type { FileFilterType } from '../files/types'
-import consola from 'consola'
+import { consola } from 'consola'
 
-export const mutations: MutationTree<ConfigState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -57,6 +55,10 @@ export const mutations: MutationTree<ConfigState> = {
     }
   },
 
+  setAppReady (state, payload: boolean) {
+    state.appReady = payload
+  },
+
   /**
    * Sets the API and Socket URLS on first load and
    * ensure the instance is configured in local storage
@@ -80,7 +82,11 @@ export const mutations: MutationTree<ConfigState> = {
     // const uiSettings = payload.uiSettings
     const uiSettings = state.uiSettings
     if (Globals.LOCAL_INSTANCES_STORAGE_KEY in localStorage) {
-      instances = JSON.parse(localStorage[Globals.LOCAL_INSTANCES_STORAGE_KEY])
+      const instancesValue = localStorage[Globals.LOCAL_INSTANCES_STORAGE_KEY]
+
+      if (typeof instancesValue === 'string') {
+        instances = JSON.parse(instancesValue) as InstanceConfig[]
+      }
     }
 
     const i = instances.findIndex((instance: InstanceConfig) => instance.apiUrl === payload.apiConfig.apiUrl)
@@ -181,32 +187,27 @@ export const mutations: MutationTree<ConfigState> = {
   /**
    * Toggle a tables header state based on its name and key.
    */
-  setUpdateHeader (state, payload: { name: string; header: AppTableHeader }) {
-    const header = payload.header
-    const keyBy = (header.key)
-      ? 'key'
-      : 'value'
-
-    const key = header[keyBy]
-    const headers: AppTablePartialHeader[] = state.uiSettings.tableHeaders[payload.name]
+  setUpdateHeader (state, payload: { name: string; header: ConfiguredTableHeader }) {
+    const headers = state.uiSettings.tableHeaders[payload.name]
 
     if (headers) {
-      const i = headers.findIndex(item => {
-        return item[keyBy] === key
-      })
+      const i = headers.findIndex(item => item.value === payload.header.value)
+
       if (i >= 0) {
-        Vue.set(headers, i, {
-          ...headers[i],
-          visible: header.visible
-        })
+        Vue.set(headers, i, payload.header)
       } else {
-        const o: AppTablePartialHeader = {
-          value: header.value,
-          visible: header.visible
-        }
-        if (keyBy === 'key') o.key = header.key
-        headers.push(o)
+        headers.push(payload.header)
       }
+    } else {
+      Vue.set(state.uiSettings.tableHeaders, payload.name, [payload.header])
     }
+  },
+
+  setUpdateHeaders (state, payload: { name: string; headers: ConfiguredTableHeader[] }) {
+    Vue.set(state.uiSettings.tableHeaders, payload.name, payload.headers)
+  },
+
+  setUpdateThumbnailSizes (state, payload: { name: string; size: number }) {
+    Vue.set(state.uiSettings.thumbnailSizes, payload.name, payload.size)
   }
-}
+} satisfies MutationTree<ConfigState>

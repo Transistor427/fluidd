@@ -9,14 +9,14 @@
         color="primary"
         :disabled="!klippyReady || printerPrinting || !homed"
         class="d-flex"
-        @click="sendMoveGcode($event)"
+        @click="moveBy($event)"
       >
         <app-btn
           :color="!homed ? 'primary' : undefined"
           :disabled="!klippyReady || printerPrinting"
           :loading="hasWait(wait)"
           class="flex-grow-1"
-          @click="sendHomeGcode"
+          @click="home"
         >
           <v-icon
             small-icon
@@ -45,8 +45,8 @@ export default class ToolheadControlBarsAxis extends Mixins(StateMixin, Toolhead
 
   get values (): number[] {
     return this.axis === 'Z'
-      ? this.$store.state.config.uiSettings.general.toolheadZMoveDistances
-      : this.$store.state.config.uiSettings.general.toolheadXYMoveDistances
+      ? this.$typedState.config.uiSettings.general.toolheadZMoveDistances
+      : this.$typedState.config.uiSettings.general.toolheadXYMoveDistances
   }
 
   get homed (): boolean {
@@ -73,17 +73,19 @@ export default class ToolheadControlBarsAxis extends Mixins(StateMixin, Toolhead
 
   get rate (): number {
     return this.axis === 'Z'
-      ? this.$store.state.config.uiSettings.general.defaultToolheadZSpeed
-      : this.$store.state.config.uiSettings.general.defaultToolheadXYSpeed
+      ? this.$typedState.config.uiSettings.general.defaultToolheadZSpeed
+      : this.$typedState.config.uiSettings.general.defaultToolheadXYSpeed
   }
 
-  sendMoveGcode (distance: number) {
-    this.sendGcode(`G91
-G1 ${this.axis}${distance} F${this.rate * 60}
-G90`)
+  moveBy (distance: number) {
+    this.sendMoveGcode(
+      {
+        [this.axis]: distance
+      },
+      this.rate)
   }
 
-  sendHomeGcode () {
+  home () {
     this.sendGcode(`G28 ${this.axis}`, this.wait)
   }
 }

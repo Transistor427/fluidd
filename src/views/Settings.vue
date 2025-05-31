@@ -21,6 +21,7 @@
         <preset-settings />
         <gcode-preview-settings />
         <timelapse-settings v-if="supportsTimelapse" />
+        <mmu-settings v-if="supportsMmu" />
         <spoolman-settings v-if="supportsSpoolman" />
         <version-settings v-if="supportsVersions" />
       </div>
@@ -46,10 +47,12 @@ import FileBrowserSettings from '@/components/settings/FileBrowserSettings.vue'
 import FileEditorSettings from '@/components/settings/FileEditorSettings.vue'
 import TimelapseSettings from '@/components/settings/timelapse/TimelapseSettings.vue'
 import SpoolmanSettings from '@/components/settings/SpoolmanSettings.vue'
+import MmuSettings from '@/components/settings/MmuSettings.vue'
 
 @Component({
   components: {
     SpoolmanSettings,
+    MmuSettings,
     TimelapseSettings,
     MacroSettings,
     GeneralSettings,
@@ -66,20 +69,24 @@ import SpoolmanSettings from '@/components/settings/SpoolmanSettings.vue'
   }
 })
 export default class Settings extends Mixins(StateMixin) {
-  get supportsVersions () {
-    return this.$store.getters['server/componentSupport']('update_manager')
+  get supportsVersions (): boolean {
+    return this.$typedGetters['server/componentSupport']('update_manager')
   }
 
-  get supportsAuth () {
-    return this.$store.getters['server/componentSupport']('authorization')
+  get supportsAuth (): boolean {
+    return this.$typedGetters['server/componentSupport']('authorization')
   }
 
-  get supportsTimelapse () {
-    return this.$store.getters['server/componentSupport']('timelapse')
+  get supportsTimelapse (): boolean {
+    return this.$typedGetters['server/componentSupport']('timelapse')
   }
 
-  get supportsSpoolman () {
-    return this.$store.getters['server/componentSupport']('spoolman')
+  get supportsSpoolman (): boolean {
+    return this.$typedGetters['server/componentSupport']('spoolman')
+  }
+
+  get supportsMmu (): boolean {
+    return this.$typedState.printer.printer.mmu != null
   }
 }
 </script>

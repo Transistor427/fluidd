@@ -4,7 +4,10 @@
       cols="12"
       md="6"
     >
-      <system-overview-card class="mb-2 mb-sm-4" />
+      <system-overview-card class="mb-2 mb-md-4" />
+
+      <sd-info-card class="mb-2 mb-md-4" />
+
       <disk-usage-card />
     </v-col>
 
@@ -12,14 +15,13 @@
       cols="12"
       md="6"
     >
-      <system-usage-card class="mb-2 mb-sm-4" />
-      <template
-        v-for="mcu in mcus"
-      >
+      <system-usage-card class="mb-2 mb-md-4" />
+
+      <template v-for="mcu in mcus">
         <mcu-card
           :key="mcu.name"
           :mcu="mcu"
-          class="mb-2 mb-sm-4"
+          class="mb-2 mb-md-4"
         />
       </template>
     </v-col>
@@ -35,6 +37,8 @@ import SystemOverviewCard from '@/components/widgets/system/SystemOverviewCard.v
 import McuCard from '@/components/widgets/system/McuCard.vue'
 import SystemUsageCard from '@/components/widgets/system/SystemUsageCard.vue'
 import DiskUsageCard from '@/components/widgets/system/DiskUsageCard.vue'
+import SdInfoCard from '@/components/widgets/system/SdInfoCard.vue'
+import type { MCU } from '@/store/printer/types'
 
 @Component({
   components: {
@@ -42,7 +46,8 @@ import DiskUsageCard from '@/components/widgets/system/DiskUsageCard.vue'
     SystemOverviewCard,
     McuCard,
     SystemUsageCard,
-    DiskUsageCard
+    DiskUsageCard,
+    SdInfoCard
   }
 })
 export default class Configure extends Mixins(StateMixin) {
@@ -53,8 +58,8 @@ export default class Configure extends Mixins(StateMixin) {
     return 6
   }
 
-  get mcus () {
-    return this.$store.getters['printer/getMcus']
+  get mcus (): MCU[] {
+    return this.$typedGetters['printer/getMcus']
   }
 }
 </script>

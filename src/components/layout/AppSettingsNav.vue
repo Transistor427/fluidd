@@ -11,7 +11,7 @@
       <v-list-item
         v-if="item.visible"
         :key="item.name"
-        :to="`/settings${item.hash}`"
+        :to="{ name: 'settings', hash: item.hash }"
         :exact="false"
         link
       >
@@ -46,21 +46,26 @@ export default class AppSettingsNav extends Vue {
       { name: this.$t('app.setting.title.thermal_presets'), hash: '#presets', visible: true },
       { name: this.$t('app.setting.title.gcode_preview'), hash: '#gcodePreview', visible: true },
       { name: this.$t('app.general.title.timelapse'), hash: '#timelapse', visible: this.supportsTimelapse },
+      { name: this.$t('app.mmu.title.headline'), hash: '#mmu', visible: this.supportsMmu },
       { name: this.$t('app.spoolman.title.spoolman'), hash: '#spoolman', visible: this.supportsSpoolman },
       { name: this.$t('app.version.title'), hash: '#versions', visible: this.supportsVersions }
     ]
   }
 
-  get supportsVersions () {
-    return this.$store.getters['server/componentSupport']('update_manager')
+  get supportsVersions (): boolean {
+    return this.$typedGetters['server/componentSupport']('update_manager')
   }
 
-  get supportsTimelapse () {
-    return this.$store.getters['server/componentSupport']('timelapse')
+  get supportsTimelapse (): boolean {
+    return this.$typedGetters['server/componentSupport']('timelapse')
   }
 
-  get supportsSpoolman () {
-    return this.$store.getters['server/componentSupport']('spoolman')
+  get supportsSpoolman (): boolean {
+    return this.$typedGetters['server/componentSupport']('spoolman')
+  }
+
+  get supportsMmu (): boolean {
+    return this.$typedState.printer.printer.mmu != null
   }
 }
 </script>

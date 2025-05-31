@@ -8,11 +8,11 @@
     :help-tooltip="$t('app.job_queue.tooltip.help')"
   >
     <template #menu>
-      <app-btn-collapse-group :collapsed="menuCollapsed">
+      <app-btn-collapse-group :collapsed="narrow">
         <app-btn
-          v-if="['ready','loading','starting'].includes(queueStatus)"
+          v-if="['ready','loading','starting'].includes(queueState)"
           small
-          class="ms-1 my-1"
+          class="me-1 my-1"
           @click="handlePause"
         >
           <v-icon
@@ -24,9 +24,12 @@
           <span>{{ $t('app.general.btn.pause') }}</span>
         </app-btn>
         <app-btn
-          v-else-if="queueStatus === 'paused'"
+          v-else-if="queueState === 'paused'"
           small
-          class="ms-1 my-1"
+          class="my-1"
+          :class="{
+            'me-1': !fullscreen
+          }"
           @click="handleResume"
         >
           <v-icon
@@ -41,20 +44,22 @@
 
       <app-btn
         v-if="!fullscreen"
-        color=""
-        fab
-        x-small
-        text
-        class="ms-1 my-1"
-        @click="$filters.routeTo($router, '/jobs')"
+        icon
+        @click="$filters.routeTo({ name: 'jobs' })"
       >
-        <v-icon>$fullScreen</v-icon>
+        <v-icon dense>
+          $fullScreen
+        </v-icon>
       </app-btn>
     </template>
 
     <job-queue
       :dense="!fullscreen"
       :bulk-actions="fullscreen"
+      :class="{
+        'full-screen': fullscreen,
+        'partial-screen': !fullscreen
+      }"
     />
   </collapsable-card>
 </template>
@@ -63,6 +68,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator'
 import JobQueue from '@/components/widgets/job-queue/JobQueue.vue'
 import { SocketActions } from '@/api/socketActions'
+import type { QueueState } from '@/store/jobQueue/types'
 
 @Component({
   components: {
@@ -71,13 +77,13 @@ import { SocketActions } from '@/api/socketActions'
 })
 export default class JobQueueCard extends Vue {
   @Prop({ type: Boolean })
-  readonly menuCollapsed?: boolean
+  readonly narrow?: boolean
 
   @Prop({ type: Boolean })
   readonly fullscreen?: boolean
 
-  get queueStatus () {
-    return this.$store.state.jobQueue.queue_state
+  get queueState (): QueueState {
+    return this.$typedState.jobQueue.queueState
   }
 
   handlePause () {
@@ -89,3 +95,14 @@ export default class JobQueueCard extends Vue {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+  .full-screen {
+    max-height: calc(100vh - 190px);
+    max-height: calc(100svh - 190px);
+  }
+
+  .partial-screen {
+    max-height: 400px;
+  }
+</style>

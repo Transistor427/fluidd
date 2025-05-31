@@ -1,19 +1,19 @@
 import Vue from 'vue'
 import { Component } from 'vue-property-decorator'
-import type { Extruder } from '@/store/printer/types'
+import type { Extruder, KlipperPrinterSettings } from '@/store/printer/types'
 
 @Component
 export default class ToolheadMixin extends Vue {
   get hasExtruder (): boolean {
-    return this.$store.getters['printer/getHasExtruder'] as boolean
+    return this.$typedGetters['printer/getHasExtruder']
   }
 
   get hasMultipleExtruders (): boolean {
-    return this.$store.getters['printer/getHasMultipleExtruders'] as boolean
+    return this.$typedGetters['printer/getHasMultipleExtruders']
   }
 
   get activeExtruder (): Extruder | undefined {
-    return this.$store.getters['printer/getActiveExtruder'] as Extruder | undefined
+    return this.$typedGetters['printer/getActiveExtruder']
   }
 
   get extruderReady (): boolean {
@@ -47,50 +47,80 @@ export default class ToolheadMixin extends Vue {
   }
 
   get allHomed (): boolean {
-    return this.$store.getters['printer/getHomedAxes']('xyz') as boolean
+    return this.$typedGetters['printer/getHomedAxes']('xyz')
   }
 
   get xyHomed (): boolean {
-    return this.$store.getters['printer/getHomedAxes']('xy') as boolean
+    return this.$typedGetters['printer/getHomedAxes']('xy')
   }
 
   get xHomed (): boolean {
-    return this.$store.getters['printer/getHomedAxes']('x') as boolean
+    return this.$typedGetters['printer/getHomedAxes']('x')
   }
 
   get yHomed (): boolean {
-    return this.$store.getters['printer/getHomedAxes']('y') as boolean
+    return this.$typedGetters['printer/getHomedAxes']('y')
   }
 
   get zHomed (): boolean {
-    return this.$store.getters['printer/getHomedAxes']('z') as boolean
+    return this.$typedGetters['printer/getHomedAxes']('z')
   }
 
   get xHasMultipleSteppers (): boolean {
-    return !!this.$store.getters['printer/getPrinterSettings']('stepper_x1') as boolean
+    const printerSettings: KlipperPrinterSettings = this.$typedGetters['printer/getPrinterSettings']
+
+    return printerSettings.stepper_x1 != null
   }
 
   get yHasMultipleSteppers (): boolean {
-    return !!this.$store.getters['printer/getPrinterSettings']('stepper_y1') as boolean
+    const printerSettings: KlipperPrinterSettings = this.$typedGetters['printer/getPrinterSettings']
+
+    return printerSettings.stepper_y1 != null
   }
 
   get zHasMultipleSteppers (): boolean {
-    return !!this.$store.getters['printer/getPrinterSettings']('stepper_z1') as boolean
-  }
+    const printerSettings: KlipperPrinterSettings = this.$typedGetters['printer/getPrinterSettings']
 
-  get hasHomingOverride (): boolean {
-    return this.$store.getters['printer/getHasHomingOverride'] as boolean
+    return printerSettings.stepper_z1 != null
   }
 
   get isManualProbeActive (): boolean {
-    return this.$store.getters['printer/getIsManualProbeActive'] as boolean
+    return this.$typedGetters['printer/getIsManualProbeActive']
   }
 
   get isBedScrewsAdjustActive (): boolean {
-    return this.$store.getters['printer/getIsBedScrewsAdjustActive'] as boolean
+    return this.$typedGetters['printer/getIsBedScrewsAdjustActive']
   }
 
   get hasScrewsTiltAdjustResults (): boolean {
-    return this.$store.getters['printer/getHasScrewsTiltAdjustResults'] as boolean
+    return this.$typedGetters['printer/getHasScrewsTiltAdjustResults']
+  }
+
+  get manualProbeDialogOpen (): boolean {
+    return this.$typedState.printer.manualProbeDialogOpen
+  }
+
+  set manualProbeDialogOpen (value: boolean) {
+    this.$typedDispatch('printer/manualProbeDialogOpen', value)
+  }
+
+  get bedScrewsAdjustDialogOpen (): boolean {
+    return this.$typedState.printer.bedScrewsAdjustDialogOpen
+  }
+
+  set bedScrewsAdjustDialogOpen (value: boolean) {
+    this.$typedDispatch('printer/bedScrewsAdjustDialogOpen', value)
+  }
+
+  get screwsTiltAdjustDialogOpen (): boolean {
+    return this.$typedState.printer.screwsTiltAdjustDialogOpen
+  }
+
+  set screwsTiltAdjustDialogOpen (value: boolean) {
+    this.$typedDispatch('printer/screwsTiltAdjustDialogOpen', value)
+  }
+
+  get forceMoveEnabled (): boolean {
+    return this.$typedState.printer.forceMoveEnabled
   }
 }

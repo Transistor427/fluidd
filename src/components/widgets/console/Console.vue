@@ -80,23 +80,23 @@ export default class Console extends Mixins(StateMixin) {
   readonly readonly?: boolean
 
   @PropSync('scrollingPaused', { type: Boolean })
-    scrollingPausedModel?: boolean
+  scrollingPausedModel?: boolean
 
   @Ref('scroller')
   readonly dynamicScroller!: DinamicScroller
 
   _pauseScroll = false
 
-  get currentCommand () {
-    return this.$store.state.console.consoleCommand
+  get currentCommand (): string {
+    return this.$typedState.console.consoleCommand
   }
 
   set currentCommand (val: string) {
-    this.$store.commit('console/setConsoleCommand', val)
+    this.$typedCommit('console/setConsoleCommand', val)
   }
 
   get flipLayout (): boolean {
-    return this.$store.state.config.uiSettings.general.flipConsoleLayout
+    return this.$typedState.config.uiSettings.general.flipConsoleLayout
   }
 
   set flipLayout (_) {
@@ -116,7 +116,7 @@ export default class Console extends Mixins(StateMixin) {
     if (this.dynamicScroller) {
       const el = this.dynamicScroller.$el
 
-      if (this.flipLayout && (this._pauseScroll || !this.$store.state.console.autoScroll)) {
+      if (this.flipLayout && (this._pauseScroll || !this.$typedState.console.autoScroll)) {
         const { scrollHeight, clientHeight } = el
 
         if (scrollHeight > clientHeight) {
@@ -152,7 +152,7 @@ export default class Console extends Mixins(StateMixin) {
 
     if (this.dynamicScroller) {
       if (
-        this.$store.state.console.autoScroll ||
+        this.$typedState.console.autoScroll ||
         this.readonly ||
         force
       ) {
@@ -188,11 +188,6 @@ export default class Console extends Mixins(StateMixin) {
 </script>
 
 <style lang="scss" scoped>
-  .console {
-    position: relative;
-    display: block;
-  }
-
   .console-item {
     white-space: pre-wrap;
   }
@@ -208,8 +203,8 @@ export default class Console extends Mixins(StateMixin) {
     height: 300px;
   }
   .console-scroller-fullscreen {
-    height: calc(100vh - 240px);
-    height: calc(100svh - 240px);
+    height: calc(100vh - 260px);
+    height: calc(100svh - 260px);
   }
 
   .v-input {

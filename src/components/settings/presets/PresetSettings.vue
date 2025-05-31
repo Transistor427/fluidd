@@ -29,10 +29,9 @@
 
       <template v-for="(preset, i) in presets">
         <app-setting
-          :key="preset.index"
+          :key="`preset${i}`"
           :title="preset.name"
           :r-cols="2"
-          @click="openEditDialog(preset)"
         >
           <template #sub-title>
             <span
@@ -44,15 +43,22 @@
               {{ k }}: {{ value.value }}<small>°C</small>
             </span>
           </template>
+
           <app-btn
-            fab
-            text
-            x-small
-            color=""
+            icon
+            @click.stop="openEditDialog(preset)"
+          >
+            <v-icon dense>
+              $edit
+            </v-icon>
+          </app-btn>
+
+          <app-btn
+            icon
             @click.stop="handleRemovePreset(preset)"
           >
-            <v-icon color="">
-              $close
+            <v-icon dense>
+              $delete
             </v-icon>
           </app-btn>
         </app-setting>
@@ -87,15 +93,15 @@ import StateMixin from '@/mixins/state'
 })
 export default class TemperaturePresetSettings extends Mixins(StateMixin) {
   get heaters (): Heater[] {
-    return this.$store.getters['printer/getHeaters']
+    return this.$typedGetters['printer/getHeaters']
   }
 
   get fans (): Fan[] {
     return this.$store.getters['printer/getOutputs'](['temperature_fan'])
   }
 
-  get presets () {
-    return this.$store.getters['config/getTempPresets']
+  get presets (): TemperaturePreset[] {
+    return this.$typedGetters['config/getTempPresets']
   }
 
   dialogState: any = {
@@ -129,11 +135,18 @@ export default class TemperaturePresetSettings extends Mixins(StateMixin) {
   }
 
   handleSavePreset (preset: TemperaturePreset) {
-    this.$store.dispatch('config/updatePreset', preset)
+    this.$typedDispatch('config/updatePreset', preset)
   }
 
-  handleRemovePreset (preset: TemperaturePreset) {
-    this.$store.dispatch('config/removePreset', preset)
+  async handleRemovePreset (preset: TemperaturePreset) {
+    const result = await this.$confirm(
+      this.$t('app.general.simple_form.msg.confirm_remove_thermal_preset', { name: preset.name }).toString(),
+      { title: this.$tc('app.general.label.confirm'), color: 'card-heading', icon: '$error' }
+    )
+
+    if (result) {
+      this.$typedDispatch('config/removePreset', preset)
+    }
   }
 }
 </script>

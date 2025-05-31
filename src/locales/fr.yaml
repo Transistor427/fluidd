@@ -24,7 +24,6 @@ app:
       delete: Supprime le profil
       load: Charger le profil
       save: Enregistrer le profil calibré dans 'printer.cfg'
-      copy_image: Copier l'image du bed mesh
   chart:
     label:
       current: Courant
@@ -41,10 +40,6 @@ app:
       auto_scroll: Scroll auto
       hide_temp_waits: Cacher les messages de température
       flip_layout: Inverser disposition
-    placeholder:
-      command: >-
-        'tab' pour l'autocomplete, 'help' pour les commandes, les flêches pour
-        l'historique
     tooltip:
       help: Saisir "help" pour les commandes<br />Utiliser <kbd>Tab</kbd> pour l'autocomplétion<br
         />Utiliser <kbd>&uarr;</kbd> et <kbd>&darr;</kbd> pour l'historique
@@ -59,18 +54,19 @@ app:
         Veuillez consulter la documentation sur les configurations multi-imprimantes
         <a href="%{url}" target="_blank">ici</a>
     hint:
-      add_printer: 'Ex : http://fluiddpi.local'
+      add_printer: 'Ex : http://fluidd.local'
     msg:
       trouble: >-
         Un souci ? <a href="%{url}" target="_blank">Cliquez ici</a> pour plus d'informations.
     tooltip:
       endpoint_examples: >-
         Saissizez l'URL de l'API .<br />Par exemple;<br
-        /><blockquote>http://fluidd.local, http://192.168.1.150</blockquote>
+        /><blockquote>fluidd.local, https://192.168.1.150</blockquote>
   endstop:
-    label:
-      open: OUVERT
-      triggered: ACTIF
+    states:
+      label:
+        open: OUVERT
+        triggered: ACTIF
     msg:
       subtitle: 'Utilisez le bouton d''actualisation pour mettre à jour l''état de
         l''arrêt final.'
@@ -82,7 +78,7 @@ app:
         klipper_backup_files: Filtrer les fichiers de sauvegardes Klipper
         rolled_log_files: Filtrer les fichiers log rotatifs
         crowsnest_backup_files: Filtrer les fichiers de sauvegarde de Crowsnest
-        hidden_files_folders: Filtrer les fichiers et dossiers cachés
+        hidden_files: Filtrer les fichiers et dossiers cachés
     label:
       dir_name: Nom du dossier
       disk_usage: Utilisation du disque
@@ -498,6 +494,11 @@ app:
       cancelled: Annulé
     title:
       printer_status: État de l'imprimante
+      stepper_driver_overheating: Le moteur pas à pas '%{name}' surchauffe
+    url:
+      stepper_driver_overheating: '%{klipperDomain}/TMC_Drivers.html#tmc-reports-error-ot1overtemperror'
+    msg:
+      possible_print_failure: Cela peut entraîner un échec de l'impression
   setting:
     btn:
       add_camera: Ajouter une caméra
@@ -750,8 +751,8 @@ app:
       canbus_warning: Seuls les nœuds de bus CAN non assignés peuvent être détectés.<br>
         Il est recommandé de n'avoir qu'un seul dispositif non assigné connecté au
         bus CAN pour éviter les problèmes de communication.<br> De plus amples informations
-        peuvent être trouvées <a target="_blank"
-        href="https://moonraker.readthedocs.io/en/latest/web_api/#query-unassigned-canbus-uuids">ici.</a>
+        peuvent être trouvées <a target="_blank" 
+        href="https://moonraker.readthedocs.io/en/latest/external_api/machine/#query-unassigned-canbus-uuids">ici.</a>
   tool:
     btn:
       home_x: X
@@ -862,6 +863,8 @@ app:
       last_used: Dernière utilisation
       device_camera: Périphérique
       vendor: Vendeur
+      weight: Poids
+      length: Longueur
     btn:
       scan_code: Scanner le code
       select: Sélectionner | Sélectionner pour {macro}
@@ -884,6 +887,7 @@ app:
       warn_on_filament_type_mismatch: Afficher un avertissement lorsque le type de
         filament de la bobine et celui sélectionné dans le slicer ne correspondent
         pas
+      remaining_filament_unit: Montrer le filament restant comme
   history:
     msg:
       confirm_jobs: Êtes-vous sûr ? Cette opération effacera tous les jobs.

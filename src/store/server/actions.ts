@@ -8,10 +8,11 @@ import type { AppPushNotification } from '../notifications/types'
 import { EventBus } from '@/eventBus'
 import i18n from '@/plugins/i18n'
 import { gte, valid } from 'semver'
+import type { ObjectWithRequest } from '@/plugins/socketClient'
 
 let retryTimeout: number
 
-export const actions: ActionTree<ServerState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
@@ -34,13 +35,15 @@ export const actions: ActionTree<ServerState, RootState> = {
       payload.components &&
       payload.components.length > 0
     ) {
-      const componentsToInit: { [index: string]: { name: string; dispatch: string } } = Globals.MOONRAKER_COMPONENTS
-      for (const key in componentsToInit) {
-        const component = componentsToInit[key]
-        if (payload.components.includes(component.name)) {
-          dispatch(component.dispatch, undefined, { root: true })
-        }
-      }
+      const promises = Object.values(Globals.MOONRAKER_COMPONENTS)
+        .map((component) => (
+          payload.components.includes(component.name)
+            ? dispatch(component.dispatch, undefined, { root: true })
+            : null
+        ))
+        .filter(promise => promise)
+
+      await Promise.all(promises)
     }
   },
 
@@ -68,30 +71,6 @@ export const actions: ActionTree<ServerState, RootState> = {
     }
   },
 
-  async checkKlipperMinVersion ({ state, dispatch }) {
-    const klipperVersion = state.system_info?.software_version ?? '?'
-
-    const fullKlipperVersion = klipperVersion.includes('-')
-      ? klipperVersion
-      : `${klipperVersion}-0`
-
-    if (
-      valid(klipperVersion) &&
-      valid(Globals.KLIPPER_MIN_VERSION) &&
-      !gte(fullKlipperVersion, Globals.KLIPPER_MIN_VERSION)
-    ) {
-      dispatch('notifications/pushNotification', {
-        id: `old-klipper-${klipperVersion}`,
-        title: 'Klipper',
-        description: i18n.t('app.version.label.old_component_version', { name: 'Klipper', version: Globals.KLIPPER_MIN_VERSION }),
-        to: '/settings#versions',
-        btnText: i18n.t('app.version.btn.view_versions'),
-        type: 'warning',
-        merge: true
-      }, { root: true })
-    }
-  },
-
   /**
    * On server info
    */
@@ -103,6 +82,11 @@ export const actions: ActionTree<ServerState, RootState> = {
     SocketActions.machineProcStats()
     SocketActions.machineSystemInfo()
 
+    const klippyConnectedNow = (
+      payload.klippy_connected &&
+      !state.info.klippy_connected
+    )
+
     commit('setServerInfo', payload)
 
     dispatch('checkMoonrakerMinVersion')
@@ -110,7 +94,12 @@ export const actions: ActionTree<ServerState, RootState> = {
     if (payload.klippy_state !== 'ready') {
       // If klippy is not connected, we'll continue to
       // retry the init process.
-      if (state.klippy_retries === 0) dispatch('initComponents', payload)
+      if (state.klippy_retries === 0) {
+        dispatch('initComponents', payload)
+      }
+      if (klippyConnectedNow) {
+        SocketActions.printerObjectsList()
+      }
       commit('setKlippyRetries', state.klippy_retries + 1)
       clearTimeout(retryTimeout)
       retryTimeout = window.setTimeout(() => {
@@ -175,18 +164,16 @@ export const actions: ActionTree<ServerState, RootState> = {
     }
   },
 
-  async onMachineSystemInfo ({ commit, dispatch }, payload: { system_info?: SystemInfo }) {
+  async onMachineSystemInfo ({ commit }, payload: { system_info?: SystemInfo }) {
     commit('setSystemInfo', payload)
-
-    dispatch('checkKlipperMinVersion')
   },
 
   async onMachinePeripherals ({ commit }, payload: Partial<Peripherals>) {
     commit('setMachinePeripherals', payload)
   },
 
-  async onMachinePeripheralsCanbus ({ commit }, payload: { can_uuids: CanbusUuid[], __request__: any }) {
-    const { interface: canbusInterface } = payload.__request__.params
+  async onMachinePeripheralsCanbus ({ commit }, payload: ObjectWithRequest<{ can_uuids: CanbusUuid[] }>) {
+    const { interface: canbusInterface } = payload.__request__.params ?? {}
 
     commit('setMachinePeripheralsCanbus', { canbusInterface, can_uuids: payload.can_uuids })
   },
@@ -244,4 +231,4 @@ export const actions: ActionTree<ServerState, RootState> = {
       commit('setMoonrakerStats', { throttled_state: payload })
     }
   }
-}
+} satisfies ActionTree<ServerState, RootState>

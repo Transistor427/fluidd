@@ -6,26 +6,13 @@ import type { RootState } from '../types'
 import { Globals } from '@/globals'
 import type { EChartsOption } from 'echarts'
 
-export const getters: GetterTree<ChartState, RootState> = {
-  /**
-   * Returns our actual chart data
-   */
-  getChartData: (state) => {
-    return state.chart
-  },
-
-  /**
-   * Returns currently selected legends
-   */
-  getSelectedLegends: (state) => {
-    return state.selectedLegends
-  },
-
+export const getters = {
   /**
    * Return the charts retention.
    */
-  getChartRetention: (state, getters, rootState, rootGetters) => {
-    const config = rootGetters['server/getConfig']
+  getChartRetention: (state, getters, rootState) => {
+    const config = rootState.server.config
+
     return config.data_store?.temperature_store_size ??
       config.server?.temperature_store_size ??
       Globals.CHART_HISTORY_RETENTION
@@ -172,4 +159,4 @@ export const getters: GetterTree<ChartState, RootState> = {
     }
     return o
   }
-}
+} satisfies GetterTree<ChartState, RootState>

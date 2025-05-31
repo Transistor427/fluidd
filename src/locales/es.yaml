@@ -22,7 +22,6 @@ app:
       delete: Elimina el perfil
       load: Cargar el perfil
       save: Guarda el perfil de calibracion en el archivo printer.cfg
-      copy_image: Copiar imagen de la malla de cama
   chart:
     label:
       current: Tª
@@ -40,10 +39,6 @@ app:
       auto_scroll: Scroll automático
       flip_layout: Invertir diseño
       hide_temp_waits: Esconder los mensajes de temperatura
-    placeholder:
-      command: >-
-        ''tabulador'' para autocompletar, ''help'' para comandos, ''flechas''
-        para historia
     tooltip:
       help: Introduce "help" para los comandos<br />Utiliza <kbd>Tab</kbd> para autocompletar<br
         />Utiliza <kbd>&uarr;</kbd> y <kbd>&darr;</kbd> para el historial
@@ -58,7 +53,7 @@ app:
         Consulte la documentación sobre las configuraciones con varias
         impresoras <a href="%{url}" target="_blank">aquí</a>.
     hint:
-      add_printer: 'Ex., http://fluiddpi.local'
+      add_printer: 'Ex., http://fluidd.local'
     msg:
       trouble: >-
         ¿Tienes problemas? <a href="%{url}" target="_blank">Haga clic aquí</a>
@@ -68,16 +63,17 @@ app:
         Ingrese la URL de la API. <br />Por ejemplo:<br
         /><blockquote>fluidd.local, https://192.168.1.150</blockquote>
   endstop:
-    label:
-      open: ABIERTO
-      triggered: ACTIVADO
+    states:
+      label:
+        open: ABIERTO
+        triggered: ACTIVADO
     msg:
       subtitle: Presione el botón 'Actualizar' para actualizar el estado.
   file_system:
     filters:
       label:
         print_start_time: Filtrar ya impresos
-        hidden_files_folders: Filtrar archivos y carpetas ocultos
+        hidden_files: Filtrar archivos y carpetas ocultos
         klipper_backup_files: Filtar archivos de backup de Klipper
         rolled_log_files: Filtrar archivos de log rotados
         moonraker_backup_files: Filtrar archivos de backup de Moonraker
@@ -109,6 +105,7 @@ app:
     tooltip:
       low_on_space: Espacio en disco limitado
       root_disabled: '{root} root no esta disponible. Por favor chequear los registros.'
+      items_count: '{count} elemento | {count} elementos'
     url:
       klipper_config: '%{klipperDomain}/Config_Reference.html#%{hash}'
       crowsnest_config: https://crowsnest.mainsail.xyz/configuration/%{hash}-section
@@ -217,6 +214,13 @@ app:
       filter: Filtro
       recover: Recuperar
       reset_default_layout: Restaurar diseño predeterminado
+      select_columns: Seleccionar columnas
+      set_default_layout: Seleccionar el diseño por defecto
+      thumbnail_size: Tamaño de vista previa
+      upload_folder: Subir carpeta
+      refresh_metadata: Actualizar metadatos
+      upload_files: Subir archivos
+      return_dashboard: Volver al panel de control
     error:
       app_setup_link: >-
         Las instrucciones de instalación de Fluidd están disponibles <a
@@ -319,6 +323,23 @@ app:
       unknown: Desconocido
       thumbnail_size: Tamaño de la miniatura
       file_time: Archivo
+      pause_at_next_layer: Pausar en la siguiente capa
+      pause_at_layer_number: Pausar en el número siguiente
+      pressure_advance: Avance de Presión
+      circle: Círculo
+      numeric_prefix_sort: Ordenar Prefijo Numérico
+      auth_source: Fuente de autenticación
+      command: Comando
+      default: Defecto
+      pause_at_layer: Pausar en la Capa
+      compact: Compactar
+      all: Todo
+      manage_accounts: Gestionar Cuentas
+      moonraker: Moonraker
+      version_sort: Ordenar Versión
+      bars: Barras
+      ldap: LDAP
+      cross: Cruz
     msg:
       bed_screws_adjust: >-
         Haga click en <b>Ajustado</b> si fue necesario un ajuste significativo
@@ -326,6 +347,14 @@ app:
         continuar.
       password_changed: Contraseña cambiada
       wrong_password: Se ha producido un error. ¿Es su contraseña correcta?
+      fluidd_settings_restore_failed: Fallo al restaurar los Ajustes de Fluid!
+      offline_ready: Fluidd se encuentra listo para trabajar fuera de línea.
+      welcome_back: Bienvenido de nuevo. <br>A continuación, inicie sesión para mantenerse
+        conectado a su impresora.
+      needs_refresh: Nuevo contenido disponible. Haga clic en botón <b>Actualizar</b>
+        para ver los cambios.
+      pending_configuration_sections_deleted: Las siguientes secciones se encuentran
+        marcadas para ser eliminadas
     simple_form:
       error:
         arrayofnums: Solo números
@@ -475,6 +504,9 @@ app:
       unit: Unidad
       z_adjust_values: Valores de ajuste de Z
       show_logo_on_background: Mostrar logotipo en el fondo
+      drag_and_drop_functionality_for_files_and_folders: Función de arrastrar y soltar
+        archivos y carpetas
+      force_move_toggle_warning: Requerir confirmación al activar FORCE_MOVE
     timer_options:
       duration: Solo duración
       filament: Estimación por filamento

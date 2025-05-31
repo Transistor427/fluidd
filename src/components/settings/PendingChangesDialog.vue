@@ -20,19 +20,20 @@
 </template>
 
 <script lang="ts">
+import type { KlipperPrinterConfig } from '@/store/printer/types'
 import { Component, Vue, VModel } from 'vue-property-decorator'
 
 @Component({})
 export default class PendingChangesDialog extends Vue {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   get saveConfigPendingItems () {
-    const saveConfigPendingItems = this.$store.getters['printer/getSaveConfigPendingItems'] as Record<string, Record<string, string>>
+    const saveConfigPendingItems: KlipperPrinterConfig = this.$typedGetters['printer/getSaveConfigPendingItems']
 
     const { changed, deleted } = Object.entries(saveConfigPendingItems)
-      .reduce((previous, [sectionName, sectionEntries]) => {
-        if (sectionEntries === null) {
+      .reduce<{ changed: string[], deleted: string[] }>((previous, [sectionName, sectionEntries]) => {
+        if (sectionEntries == null) {
           previous.deleted.push(`# [${sectionName}]`)
         } else {
           const sectionEntryNameValues = Object.entries(sectionEntries)
@@ -42,7 +43,7 @@ export default class PendingChangesDialog extends Vue {
         }
 
         return previous
-      }, { changed: [], deleted: [] } as { changed: string[], deleted: string[] })
+      }, { changed: [], deleted: [] })
 
     const lines = [...changed]
 

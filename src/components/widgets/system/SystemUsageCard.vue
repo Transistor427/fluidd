@@ -9,12 +9,10 @@
         <klipper-load-chart />
         <moonraker-load-chart />
         <system-memory-chart />
-        <template
-          v-for="(mcu, i) in mcus"
-        >
+        <template v-for="(mcu, i) in mcus">
           <mcu-load-chart
             :key="i"
-            :mcu="mcu.name"
+            :mcu="mcu"
           />
         </template>
       </v-row>
@@ -33,6 +31,8 @@ import SystemMemoryChart from './SystemMemoryChart.vue'
 import KlipperLoadChart from './KlipperLoadChart.vue'
 import MoonrakerLoadChart from './MoonrakerLoadChart.vue'
 import McuLoadChart from './McuLoadChart.vue'
+import type { ServerSystemStat } from '@/store/server/types'
+import type { KlipperPrinterSystemStatsState, MCU } from '@/store/printer/types'
 
 @Component({
   components: {
@@ -44,16 +44,16 @@ import McuLoadChart from './McuLoadChart.vue'
   }
 })
 export default class PrinterStatsCard extends Vue {
-  get procStats () {
-    return this.$store.getters['server/getProcessStats']
+  get procStats (): ServerSystemStat[] {
+    return this.$typedState.server.moonraker_stats
   }
 
-  get systemStats () {
-    return this.$store.getters['printer/getSystemStats']
+  get systemStats (): KlipperPrinterSystemStatsState {
+    return this.$typedState.printer.printer.system_stats
   }
 
-  get mcus () {
-    return this.$store.getters['printer/getMcus']
+  get mcus (): MCU[] {
+    return this.$typedGetters['printer/getMcus']
   }
 }
 </script>

@@ -2,7 +2,6 @@
   <collapsable-card
     :title="$t('app.timelapse.title.timelapse_status')"
     icon="$info"
-    class="mb-2 sb-sm-4"
   >
     <v-card-text>
       <v-row>
@@ -91,7 +90,7 @@ export default class StatusCard extends Mixins(StateMixin, FilesMixin) {
   selectedFrameNumber = 0
 
   saveFrames () {
-    SocketActions.machineTimelapseSaveFrames(this.$waits.onTimelapseSaveFrame)
+    SocketActions.machineTimelapseSaveFrames()
   }
 
   get savingFrames () {
@@ -127,19 +126,19 @@ export default class StatusCard extends Mixins(StateMixin, FilesMixin) {
   }
 
   get camera (): WebcamConfig | undefined {
-    return this.$store.getters['webcams/getWebcamById'](this.settings.camera) as WebcamConfig | undefined
+    return this.$typedGetters['webcams/getWebcamById'](this.settings.camera)
   }
 
   get settings (): TimelapseSettings {
-    return this.$store.getters['timelapse/getSettings']
+    return this.$typedState.timelapse.settings ?? {} as TimelapseSettings
   }
 
   get lastFrame (): TimelapseLastFrame | undefined {
-    return this.$store.getters['timelapse/getLastFrame']
+    return this.$typedState.timelapse.lastFrame
   }
 
   get renderStatus (): RenderStatus | undefined {
-    return this.$store.getters['timelapse/getRenderStatus']
+    return this.$typedState.timelapse.renderStatus
   }
 
   get renderProgress () {
@@ -157,6 +156,7 @@ export default class StatusCard extends Mixins(StateMixin, FilesMixin) {
 <style lang="scss" scoped>
 .thumbnail {
   width: 100%;
+  pointer-events: none;
 }
 
 .render-progress {

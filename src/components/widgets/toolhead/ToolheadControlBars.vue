@@ -1,5 +1,5 @@
 <template>
-  <div v-if="!forceMove">
+  <div v-if="!forceMoveEnabled">
     <toolhead-control-bars-axis axis="X" />
     <toolhead-control-bars-axis axis="Y" />
     <toolhead-control-bars-axis axis="Z" />
@@ -68,14 +68,10 @@ import type { Stepper } from '@/store/printer/types'
 })
 export default class ToolheadControlBars extends Mixins(StateMixin, ToolheadMixin) {
   get steppers (): Stepper[] {
-    const steppers = this.$store.getters['printer/getSteppers'] as Stepper[]
+    const steppers: Stepper[] = this.$typedGetters['printer/getSteppers']
 
     return steppers
       .filter(stepper => stepper.key.startsWith('stepper_'))
-  }
-
-  get forceMove (): boolean {
-    return this.$store.state.config.uiSettings.toolhead.forceMove as boolean
   }
 }
 </script>

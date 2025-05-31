@@ -1,7 +1,9 @@
 <template>
   <div
     class="chart"
-    :style="{ 'height': height }"
+    :style="{
+      height: $filters.getPixelsString(height)
+    }"
   >
     <e-chart
       ref="chart"
@@ -23,30 +25,31 @@ import type { ECharts, EChartsOption, GraphicComponentOption } from 'echarts'
 import { merge, cloneDeepWith } from 'lodash-es'
 import BrowserMixin from '@/mixins/browser'
 import type { BedSize } from '@/store/printer/types'
+import downloadUrl from '@/util/download-url'
 
 @Component({})
 export default class BedMeshChart extends Mixins(BrowserMixin) {
   @Prop({ type: Array, required: true })
   readonly data!: []
 
-  @Prop({ type: Array<GraphicComponentOption>, default: () => [] })
+  @Prop({ type: Array, default: () => [] })
   readonly graphics!: GraphicComponentOption[]
 
   @Prop({ type: Object, default: () => {} })
   readonly options!: Record<string, unknown>
 
-  @Prop({ type: String, default: '100%' })
-  readonly height!: string
+  @Prop({ type: [String, Number], default: '100%' })
+  readonly height!: string | number
 
   @Ref('chart')
   readonly chart!: ECharts
 
-  get flatSurface () {
-    return this.$store.state.mesh.flatSurface
+  get flatSurface (): boolean {
+    return this.$typedState.mesh.flatSurface
   }
 
-  get bedSize (): BedSize | undefined {
-    return this.$store.getters['printer/getBedSize'] as BedSize | undefined
+  get bedSize (): BedSize {
+    return this.$typedGetters['printer/getBedSize']
   }
 
   @Watch('flatSurface')
@@ -70,7 +73,7 @@ export default class BedMeshChart extends Mixins(BrowserMixin) {
   get opts (): EChartsOption {
     // If options includes series data, rip it out so we can merge it with
     // the given series in our initial options.
-    const darkMode = this.$store.state.config.uiSettings.theme.isDark
+    const darkMode: boolean = this.$typedState.config.uiSettings.theme.isDark
 
     const fontColor = (darkMode) ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'
     const fontSize = (this.isMobileViewport) ? 14 : 16
@@ -205,14 +208,14 @@ export default class BedMeshChart extends Mixins(BrowserMixin) {
       },
       xAxis3D: {
         type: 'value',
-        min: this.bedSize?.minX,
-        max: this.bedSize?.maxX,
+        min: this.bedSize.minX,
+        max: this.bedSize.maxX,
         ...axisCommon
       },
       yAxis3D: {
         type: 'value',
-        min: this.bedSize?.minY,
-        max: this.bedSize?.maxY,
+        min: this.bedSize.minY,
+        max: this.bedSize.maxY,
         ...axisCommon
       },
       zAxis3D: {
@@ -239,16 +242,18 @@ export default class BedMeshChart extends Mixins(BrowserMixin) {
     return opts
   }
 
-  async copyImage () {
-    const image = await fetch(this.chart.getDataURL({ type: 'png', backgroundColor: '#262629' }))
+  async downloadImage () {
+    const url = this.chart.getDataURL({
+      type: 'png',
+      backgroundColor: '#262629'
+    })
 
-    const blob = await image.blob()
+    const filename = [
+      'bedmesh',
+      this.$typedState.printer.printer.bed_mesh?.profile_name
+    ].filter(x => x).join('-')
 
-    const data = [
-      new ClipboardItem({ 'image/png': blob })
-    ]
-
-    await navigator.clipboard.write(data)
+    downloadUrl(filename, url)
   }
 }
 </script>

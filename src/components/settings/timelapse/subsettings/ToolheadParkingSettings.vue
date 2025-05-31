@@ -8,7 +8,6 @@
       <v-switch
         v-model="parkhead"
         hide-details
-        class="mb-5"
         :disabled="parkheadBlocked"
         @click.native.stop
       />
@@ -73,8 +72,6 @@
           hide-details="auto"
           :items="parkPositions"
           :disabled="parkposBlocked"
-          item-value="value"
-          item-text="text"
         />
       </app-setting>
 
@@ -111,7 +108,6 @@
         <v-switch
           v-model="firmwareRetract"
           hide-details
-          class="mb-5"
           :disabled="firmwareRetractBlocked"
           @click.native.stop
         />
@@ -147,14 +143,14 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   @Ref('parkPosDZElement')
   readonly parkPosDZElement?: VInput
 
-  get parkPositions (): {text: string, value: ParkPosition}[] {
+  get parkPositions (): { text: string, value: ParkPosition }[] {
     const values: ParkPosition[] = ['front_left', 'front_right', 'center', 'back_left', 'back_right', 'x_only', 'y_only', 'custom']
 
     return values.map(value => ({ text: this.$tc(`app.timelapse.setting.parkpos.${value}`), value }))
   }
 
   get parkheadBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('parkhead')
+    return this.$typedGetters['timelapse/isBlockedSetting']('parkhead')
   }
 
   get parkhead (): boolean {
@@ -166,7 +162,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get parkposBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('parkpos')
+    return this.$typedGetters['timelapse/isBlockedSetting']('parkpos')
   }
 
   get parkpos (): ParkPosition {
@@ -178,7 +174,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get parkTimeBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('park_time')
+    return this.$typedGetters['timelapse/isBlockedSetting']('park_time')
   }
 
   get parkTime (): number {
@@ -192,7 +188,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get parkTravelSpeedBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('park_travel_speed')
+    return this.$typedGetters['timelapse/isBlockedSetting']('park_travel_speed')
   }
 
   get parkTravelSpeed (): number {
@@ -206,7 +202,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get parkPosZBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('park_custom_pos_dz')
+    return this.$typedGetters['timelapse/isBlockedSetting']('park_custom_pos_dz')
   }
 
   get parkPosZ (): number {
@@ -220,7 +216,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get firmwareRetractBlocked (): boolean {
-    return this.$store.getters['timelapse/isBlockedSetting']('fw_retract')
+    return this.$typedGetters['timelapse/isBlockedSetting']('fw_retract')
   }
 
   get firmwareRetract (): boolean {
@@ -232,7 +228,7 @@ export default class ToolheadParkingSettings extends Mixins(StateMixin) {
   }
 
   get settings (): TimelapseSettings {
-    return this.$store.getters['timelapse/getSettings']
+    return this.$typedState.timelapse.settings ?? {} as TimelapseSettings
   }
 
   subtitleIfBlocked (blocked: boolean): string {

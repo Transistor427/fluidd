@@ -1,15 +1,14 @@
 import vuetify from '@/plugins/vuetify'
 import type { ActionTree } from 'vuex'
-import type { ConfigState, SaveByPath, InitConfig, InstanceConfig, UiSettings, ThemeConfig } from './types'
+import type { ConfigState, SaveByPath, InitConfig, InstanceConfig, UiSettings, ThemeConfig, ConfiguredTableHeader } from './types'
 import type { RootState } from '../types'
 import { SocketActions } from '@/api/socketActions'
 import { loadLocaleMessagesAsync, getStartingLocale } from '@/plugins/i18n'
 import { Waits } from '@/globals'
-import type { AppTableHeader } from '@/types'
 import type { FileFilterType } from '../files/types'
 import { TinyColor } from '@ctrl/tinycolor'
 
-export const actions: ActionTree<ConfigState, RootState> = {
+export const actions = {
   /**
    * Reset our store
    */
@@ -112,7 +111,7 @@ export const actions: ActionTree<ConfigState, RootState> = {
   /**
    * Updates a known instance
    */
-  async updateInstance ({ commit, dispatch, state, getters }, value: InstanceConfig) {
+  async updateInstance ({ commit, dispatch, state, getters }, value: string) {
     // First, update the name in ui settings.
     dispatch('saveByPath', {
       path: 'uiSettings.general.instanceName',
@@ -121,7 +120,7 @@ export const actions: ActionTree<ConfigState, RootState> = {
     })
 
     // Now, find the instance in our instance list and update there.
-    let instance = getters.getCurrentInstance
+    let instance: InstanceConfig | undefined = getters.getCurrentInstance
     if (instance) {
       instance = {
         ...instance,
@@ -177,10 +176,27 @@ export const actions: ActionTree<ConfigState, RootState> = {
   /**
    * Toggle a tables header state based on its name and key.
    */
-  async updateHeader ({ commit, state }, payload: { name: string; header: AppTableHeader }) {
+  async updateHeader ({ commit, state }, payload: { name: string; header: ConfiguredTableHeader }) {
     commit('setUpdateHeader', payload)
+
     if (state.uiSettings.tableHeaders[payload.name]) {
       SocketActions.serverWrite(`uiSettings.tableHeaders.${payload.name}`, state.uiSettings.tableHeaders[payload.name])
+    }
+  },
+
+  async updateHeaders ({ commit, state }, payload: { name: string; headers: ConfiguredTableHeader[] }) {
+    commit('setUpdateHeaders', payload)
+
+    if (state.uiSettings.tableHeaders[payload.name]) {
+      SocketActions.serverWrite(`uiSettings.tableHeaders.${payload.name}`, state.uiSettings.tableHeaders[payload.name])
+    }
+  },
+
+  async updateThumbnailSizes ({ commit, state }, payload: { name: string; size: number }) {
+    commit('setUpdateThumbnailSizes', payload)
+
+    if (state.uiSettings.thumbnailSizes[payload.name]) {
+      SocketActions.serverWrite(`uiSettings.thumbnailSizes.${payload.name}`, state.uiSettings.thumbnailSizes[payload.name])
     }
   },
 
@@ -198,4 +214,4 @@ export const actions: ActionTree<ConfigState, RootState> = {
       server: true
     })
   }
-}
+} satisfies ActionTree<ConfigState, RootState>

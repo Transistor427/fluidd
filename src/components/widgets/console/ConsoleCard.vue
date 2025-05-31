@@ -15,37 +15,31 @@
     <template #menu>
       <app-btn
         v-if="scrollingPaused"
-        color=""
-        fab
-        x-small
-        text
-        class="ms-1 my-1"
+        icon
         @click="consoleElement.scrollToLatest(true)"
       >
-        <v-icon>{{ flipLayout ? '$up' : '$down' }}</v-icon>
+        <v-icon dense>
+          {{ flipLayout ? '$up' : '$down' }}
+        </v-icon>
       </app-btn>
 
       <app-btn
         v-if="!fullscreen"
-        color=""
-        fab
-        x-small
-        text
-        class="ms-1 my-1"
-        @click="$filters.routeTo($router, '/console')"
+        icon
+        @click="$filters.routeTo({ name: 'console' })"
       >
-        <v-icon>$fullScreen</v-icon>
+        <v-icon dense>
+          $fullScreen
+        </v-icon>
       </app-btn>
 
       <app-btn
-        color=""
-        fab
-        x-small
-        text
-        class="ms-1 my-1"
+        icon
         @click="handleClear"
       >
-        <v-icon>$delete</v-icon>
+        <v-icon dense>
+          $delete
+        </v-icon>
       </app-btn>
 
       <v-menu
@@ -56,18 +50,15 @@
         :close-on-content-click="false"
       >
         <template #activator="{ on, attrs }">
-          <v-btn
-            fab
-            x-small
-            text
+          <app-btn
+            icon
             v-bind="attrs"
-            class="ms-1 my-1"
             v-on="on"
           >
-            <v-icon>
+            <v-icon dense>
               $cog
             </v-icon>
-          </v-btn>
+          </app-btn>
         </template>
 
         <v-list dense>
@@ -155,15 +146,15 @@ export default class ConsoleCard extends Vue {
   scrollingPaused = false
 
   get filters (): ConsoleFilter[] {
-    return this.$store.getters['console/getFilters'] as ConsoleFilter[]
+    return this.$typedState.console.consoleFilters
   }
 
   get hideTempWaits (): boolean {
-    return this.$store.state.config.uiSettings.general.hideTempWaits
+    return this.$typedState.config.uiSettings.general.hideTempWaits
   }
 
   set hideTempWaits (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.hideTempWaits',
       value,
       server: true
@@ -171,11 +162,11 @@ export default class ConsoleCard extends Vue {
   }
 
   get flipLayout (): boolean {
-    return this.$store.state.config.uiSettings.general.flipConsoleLayout
+    return this.$typedState.config.uiSettings.general.flipConsoleLayout
   }
 
   set flipLayout (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.flipConsoleLayout',
       value,
       server: true
@@ -185,19 +176,19 @@ export default class ConsoleCard extends Vue {
   }
 
   get items (): ConsoleEntry[] {
-    return this.$store.getters['console/getConsoleEntries']
+    return this.$typedGetters['console/getConsoleEntries']
   }
 
   get inLayout (): boolean {
-    return (this.$store.state.config.layoutMode)
+    return (this.$typedState.config.layoutMode)
   }
 
-  get autoScroll () {
-    return this.$store.state.console.autoScroll
+  get autoScroll (): boolean {
+    return this.$typedState.console.autoScroll
   }
 
   set autoScroll (value: boolean) {
-    this.$store.dispatch('console/onUpdateAutoScroll', value)
+    this.$typedDispatch('console/onUpdateAutoScroll', value)
     if (value) {
       this.consoleElement.scrollToLatest(true)
     }
@@ -217,11 +208,11 @@ export default class ConsoleCard extends Vue {
   }
 
   handleClear () {
-    this.$store.dispatch('console/onClear')
+    this.$typedDispatch('console/onClear')
   }
 
   handleToggleFilter (filter: ConsoleFilter) {
-    this.$store.dispatch('console/onSaveFilter', {
+    this.$typedDispatch('console/onSaveFilter', {
       ...filter,
       enabled: !filter.enabled
     })

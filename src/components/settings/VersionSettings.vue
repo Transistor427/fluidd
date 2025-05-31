@@ -15,7 +15,7 @@
           small
           color="primary"
           class="mr-2"
-          :disabled="!hasUpdates || isRefreshing || printerPrinting"
+          :disabled="!hasUpdates || hasInvalidComponent || isRefreshing || printerPrinting"
           @click="handleUpdateComponent('all')"
         >
           <v-icon left>
@@ -49,7 +49,6 @@
         <v-switch
           v-model="enableNotifications"
           hide-details
-          class="mb-5"
           @click.native.stop
         />
       </app-setting>
@@ -57,7 +56,7 @@
       <v-divider />
 
       <template v-for="(component, i) in components">
-        <app-setting :key="`component-${component.key}-${component.name}`">
+        <app-setting :key="`component-${component.name}-${i}`">
           <template #title>
             {{ packageTitle(component) }}
             <v-tooltip
@@ -84,23 +83,23 @@
           </template>
 
           <template #sub-title>
-            <span v-if="component.key !== 'system' && 'full_version_string' in component">
+            <span v-if="'full_version_string' in component">
               {{ component.full_version_string }}
             </span>
-            <span v-else>
+            <span v-else-if="'version' in component">
               {{ component.version }}
             </span>
 
-            <span v-if="'remote_version' in component && hasUpdate(component.key)">
+            <span v-if="'remote_version' in component && hasUpdate(component.name)">
               -> {{ component.remote_version }}
             </span>
-            <span v-if="component.key === 'system' && component.package_count > 0">
+            <span v-if="'package_count' in component && component.package_count > 0">
               {{ component.package_count }} packages
             </span>
           </template>
 
           <v-tooltip
-            v-if="hasUpdate(component.key) && !inError(component)"
+            v-if="hasUpdate(component.name) && !inError(component)"
             left
           >
             <template #activator="{ attrs, on }">
@@ -117,18 +116,18 @@
                 </v-icon>
               </app-btn>
             </template>
-            <span v-if="'name' in component">{{ $t('app.version.tooltip.release_notes') }}</span>
+            <span v-if="'name' in component && component.name !== 'system'">{{ $t('app.version.tooltip.release_notes') }}</span>
             <span v-else-if="'commits_behind' in component">{{ $t('app.version.tooltip.commit_history') }}</span>
             <span v-else-if="'package_list' in component">{{ $t('app.version.tooltip.packages') }}</span>
           </v-tooltip>
 
           <version-status
-            :has-update="hasUpdate(component.key)"
+            :has-update="hasUpdate(component.name)"
             :disabled="isRefreshing || printerPrinting"
             :loading="isRefreshing"
             :dirty="('is_dirty' in component) ? component.is_dirty : false"
             :valid="('is_valid' in component) ? component.is_valid : true"
-            @on-update="handleUpdateComponent(component.key)"
+            @on-update="handleUpdateComponent(component.name)"
             @on-recover="handleRecoverComponent(component)"
           />
         </app-setting>
@@ -136,7 +135,7 @@
         <template v-if="'warnings' in component">
           <v-alert
             v-for="(warning, index) in component.warnings ?? []"
-            :key="`warning-${component.key}-${index}`"
+            :key="`warning-${component.name}-${index}`"
             dense
             type="warning"
             text
@@ -149,7 +148,7 @@
         <template v-if="'anomalies' in component">
           <v-alert
             v-for="(anomaly, index) in component.anomalies ?? []"
-            :key="`anomaly-${component.key}-${index}`"
+            :key="`anomaly-${component.name}-${index}`"
             dense
             icon="$info"
             text
@@ -161,7 +160,7 @@
 
         <v-divider
           v-if="i < components.length - 1 && components.length > 0"
-          :key="`component-${component.key}-${component.name}-_divider`"
+          :key="`component-${component.name}-${i}-_divider`"
         />
       </template>
     </v-card>
@@ -180,7 +179,7 @@ import VersionStatus from './VersionStatus.vue'
 import VersionCommitHistoryDialog from './VersionInformationDialog.vue'
 import StateMixin from '@/mixins/state'
 import { SocketActions } from '@/api/socketActions'
-import type { VersionedUpdatePackage, UpdatePackage } from '@/store/version/types'
+import type { VersionInfo } from '@/store/version/types'
 
 @Component({
   components: {
@@ -194,8 +193,8 @@ export default class VersionSettings extends Mixins(StateMixin) {
     component: null
   }
 
-  get components () {
-    return this.$store.getters['version/getVisibleComponents']
+  get components (): VersionInfo[] {
+    return this.$typedGetters['version/getVisibleComponents']
   }
 
   get isRefreshing () {
@@ -203,43 +202,56 @@ export default class VersionSettings extends Mixins(StateMixin) {
   }
 
   get hasUpdates () {
-    const d = this.$store.getters['version/hasUpdates']
+    const d = this.$typedGetters['version/hasUpdates']
     return d
   }
 
-  get enableNotifications () {
-    return this.$store.state.config.uiSettings.general.enableVersionNotifications
+  get hasInvalidComponent () {
+    return this.components
+      .some(component => 'is_valid' in component && !component.is_valid)
+  }
+
+  get enableNotifications (): boolean {
+    return this.$typedState.config.uiSettings.general.enableVersionNotifications
   }
 
   set enableNotifications (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.enableVersionNotifications',
       value,
       server: true
     })
   }
 
-  packageTitle (component: UpdatePackage) {
-    if (component.key === 'system') {
+  packageTitle (component: VersionInfo) {
+    if (component.name === 'system') {
       return this.$t('app.version.label.os_packages')
     }
 
-    return component.key
+    return component.name
   }
 
   hasUpdate (component: string) {
-    return this.$store.getters['version/hasUpdate'](component)
+    return this.$typedGetters['version/hasUpdate'](component)
   }
 
-  inError (component: UpdatePackage) {
-    const dirty = ('is_dirty' in component) ? component.is_dirty : false
-    const valid = ('is_valid' in component) ? component.is_valid : true
-    return (dirty || !valid)
+  inError (component: VersionInfo) {
+    return (
+      (
+        'is_dirty' in component &&
+        component.is_dirty
+      ) ||
+      (
+        'is_valid' in component &&
+        !component.is_valid
+      )
+    )
   }
 
   // Will attempt to update the requirec component based on its type.
   handleUpdateComponent (key: string) {
-    this.$store.dispatch('version/onUpdateStatus', { busy: true })
+    this.$typedDispatch('version/onUpdateStatus', { busy: true })
+
     switch (key) {
       case 'klipper':
         SocketActions.machineUpdateKlipper()
@@ -257,52 +269,64 @@ export default class VersionSettings extends Mixins(StateMixin) {
         SocketActions.machineUpdateClient(key)
         break
     }
-    // Close the drawer
-    this.$emit('click')
   }
 
   // Will attempt to recover a component based on its type and current status.
-  handleRecoverComponent (component: UpdatePackage) {
-    this.$store.dispatch('version/onUpdateStatus', { busy: true })
-    const dirty = ('is_dirty' in component) ? component.is_dirty : false
-    const valid = ('is_valid' in component) ? component.is_valid : true
-    if (dirty) {
-      SocketActions.machineUpdateRecover(component.key, false)
-    }
-    if (!valid) {
-      SocketActions.machineUpdateRecover(component.key, true)
+  handleRecoverComponent (component: VersionInfo) {
+    this.$typedDispatch('version/onUpdateStatus', { busy: true })
+
+    if (
+      'is_dirty' in component &&
+      component.is_dirty
+    ) {
+      SocketActions.machineUpdateRecover(component.name, false)
+    } else if (
+      'is_valid' in component &&
+      !component.is_valid
+    ) {
+      SocketActions.machineUpdateRecover(component.name, true)
     }
   }
 
   forceCheck () {
-    if (this.$store.getters['server/getIsMinApiVersion']('1.2.0')) {
+    if (this.$typedGetters['server/getIsMinApiVersion']('1.2.0')) {
       SocketActions.machineUpdateRefresh()
     } else {
       SocketActions.machineUpdateStatus(true)
     }
   }
 
-  getBaseUrl (component: VersionedUpdatePackage) {
+  getBaseUrl (component: VersionInfo) {
     if ('remote_url' in component && component.remote_url) {
       return component.remote_url
     }
     if ('owner' in component) {
-      return `https://github.com/${component.owner}/${component.repo_name || component.key}`
+      return `https://github.com/${component.owner}/${component.repo_name || component.name}`
     }
     return ''
   }
 
-  handleInformationDialog (component: UpdatePackage) {
-    if (
-      'commits_behind' in component ||
-      'package_list' in component
-    ) {
-      this.informationDialogState = {
-        open: true,
-        component
-      }
-    } else {
-      window.open(`${this.getBaseUrl(component)}/releases`)
+  handleInformationDialog (component: VersionInfo) {
+    switch (component.configured_type) {
+      case 'python':
+        if (component.channel === 'dev') {
+          window.open(`${this.getBaseUrl(component)}/compare/${component.current_hash}..${component.remote_hash}`)
+        } else {
+          window.open(component.changelog_url)
+        }
+        break
+
+      case 'git_repo':
+      case 'system':
+        this.informationDialogState = {
+          open: true,
+          component
+        }
+        break
+
+      default:
+        window.open(`${this.getBaseUrl(component)}/releases`)
+        break
     }
   }
 }

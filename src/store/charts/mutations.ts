@@ -3,7 +3,7 @@ import type { MutationTree } from 'vuex'
 import type { ChartData, ChartState } from './types'
 import { defaultState } from './state'
 
-export const mutations: MutationTree<ChartState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -15,6 +15,15 @@ export const mutations: MutationTree<ChartState> = {
     })
 
     Object.assign(state, defaultState())
+  },
+
+  setResetChartStore (state) {
+    const { chart, ready } = defaultState()
+
+    Object.assign(state, {
+      chart,
+      ready
+    })
   },
 
   /**
@@ -48,4 +57,4 @@ export const mutations: MutationTree<ChartState> = {
   setSelectedLegends (state, payload) {
     state.selectedLegends = payload
   }
-}
+} satisfies MutationTree<ChartState>

@@ -3,7 +3,7 @@ import type { MutationTree } from 'vuex'
 import { defaultState } from './state'
 import type { CanbusUuid, Peripherals, ServerInfo, ServerState, ServiceState, SystemInfo } from './types'
 
-export const mutations: MutationTree<ServerState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -14,10 +14,9 @@ export const mutations: MutationTree<ServerState> = {
   setResetKlippy (state) {
     const { klippy_retries, info } = defaultState()
 
-    Object.assign(state, {
-      klippy_retries,
-      info
-    })
+    state.klippy_retries = klippy_retries
+    state.info.klippy_connected = info.klippy_connected
+    state.info.klippy_state = info.klippy_state
   },
 
   setServerInfo (state, payload: ServerInfo) {
@@ -37,10 +36,10 @@ export const mutations: MutationTree<ServerState> = {
     }
   },
 
-  setMachinePeripheralsCanbus (state, payload: { canbusInterface: string, canUuids: CanbusUuid[] }) {
+  setMachinePeripheralsCanbus (state, payload: { canbusInterface: string, can_uuids: CanbusUuid[] }) {
     state.can_uuids = {
       ...state.can_uuids,
-      [payload.canbusInterface]: payload.canUuids
+      [payload.canbusInterface]: payload.can_uuids
     }
   },
 
@@ -86,4 +85,4 @@ export const mutations: MutationTree<ServerState> = {
   setKlippyRetries (state, payload: number) {
     state.klippy_retries = payload
   }
-}
+} satisfies MutationTree<ServerState>

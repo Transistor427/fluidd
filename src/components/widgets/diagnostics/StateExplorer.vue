@@ -19,7 +19,7 @@ import JsonViewer from 'vue-json-viewer'
 export default class StateExplorer extends Mixins(StateMixin) {
   get state () {
     return {
-      printer: this.$store.state.printer.printer
+      printer: this.$typedState.printer.printer
     }
   }
 
@@ -31,7 +31,7 @@ export default class StateExplorer extends Mixins(StateMixin) {
   handleClick (path: string) {
     const sanitizedPath = path
       .replace('$.', '')
-      .replace(/\.(\w*[^\w\S.]+\w*)/g, (_, match) => {
+      .replace(/\.(\w*\s+\w*)/g, (_, match) => {
         if (isNaN(match)) return `['${match}']`
         return `[${match}]`
       })

@@ -2,9 +2,11 @@
   <v-dialog
     v-model="open"
     :scrollable="scrollable"
-    v-bind="$attrs"
+    :persistent="persistent"
     :fullscreen="isMobileViewport"
     :transition="isMobileViewport ? 'dialog-bottom-transition' : undefined"
+    v-bind="$attrs"
+    v-on="$listeners"
   >
     <v-form
       ref="form"
@@ -51,21 +53,19 @@
             </v-col>
 
             <v-col
+              v-if="!persistent"
               cols="auto"
               align-self="center"
             >
-              <v-btn
-                fab
-                text
-                x-small
-                class="ml-1"
+              <app-btn
+                icon
                 :disabled="closeButtonDisabled"
                 @click="open = false"
               >
-                <v-icon>
+                <v-icon dense>
                   $close
                 </v-icon>
-              </v-btn>
+              </app-btn>
             </v-col>
           </v-row>
         </v-card-title>
@@ -119,10 +119,12 @@ import BrowserMixin from '@/mixins/browser'
 import type { VForm } from '@/types'
 import { Component, Prop, VModel, Ref, PropSync, Mixins } from 'vue-property-decorator'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppDialog extends Mixins(BrowserMixin) {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: Boolean })
   readonly disabled?: boolean
@@ -158,6 +160,9 @@ export default class AppDialog extends Mixins(BrowserMixin) {
   readonly scrollable?: boolean
 
   @Prop({ type: Boolean })
+  readonly persistent?: boolean
+
+  @Prop({ type: Boolean })
   readonly noActions?: boolean
 
   @Prop({ type: [Boolean, String] })
@@ -167,7 +172,7 @@ export default class AppDialog extends Mixins(BrowserMixin) {
   readonly titleShadow?: boolean
 
   @PropSync('valid', { type: Boolean })
-    validModel?: boolean
+  validModel?: boolean
 
   @Ref('form')
   readonly form!: VForm

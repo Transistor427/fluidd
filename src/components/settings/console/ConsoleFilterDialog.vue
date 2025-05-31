@@ -49,8 +49,6 @@
           single-line
           hide-details="auto"
           :items="types"
-          item-value="value"
-          item-text="text"
         />
       </app-setting>
 
@@ -84,7 +82,7 @@ import type { ConsoleFilter } from '@/store/console/types'
 @Component({})
 export default class ConsoleFilterDialog extends Vue {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: Object, required: true })
   readonly filter!: ConsoleFilter
@@ -121,8 +119,8 @@ export default class ConsoleFilterDialog extends Vue {
     return this.types.find(f => f.value === this.filter?.type) || this.types[0]
   }
 
-  get filters () {
-    return this.$store.getters['console/getFilters']
+  get filters (): ConsoleFilter[] {
+    return this.$typedState.console.consoleFilters
   }
 
   handleSave () {

@@ -1,11 +1,9 @@
 import Vue from 'vue'
 import type { MutationTree } from 'vuex'
-import type { PrinterState } from './types'
+import type { KlipperPrinterState, PrinterState } from './types'
 import { defaultState } from './state'
-import { consola } from 'consola'
-import { get } from 'lodash-es'
 
-export const mutations: MutationTree<PrinterState> = {
+export const mutations = {
   /**
    * Reset state
    */
@@ -13,16 +11,24 @@ export const mutations: MutationTree<PrinterState> = {
     Object.assign(state, defaultState())
   },
 
+  setManualProbeDialogOpen (state, payload: boolean) {
+    state.manualProbeDialogOpen = payload
+  },
+
+  setBedScrewsAdjustDialogOpen (state, payload: boolean) {
+    state.bedScrewsAdjustDialogOpen = payload
+  },
+
+  setScrewsTiltAdjustDialogOpen (state, payload: boolean) {
+    state.screwsTiltAdjustDialogOpen = payload
+  },
+
+  setForceMoveEnabled (state, payload: boolean) {
+    state.forceMoveEnabled = payload
+  },
+
   setPrinterInfo (state, payload) {
-    Vue.set(state.printer, 'info', payload)
-  },
-
-  setQueryEndstops (state, payload) {
-    state.printer.endstops = payload
-  },
-
-  setPrinterBusy (state, payload: boolean) {
-    state.printer.busy = payload
+    state.info = payload
   },
 
   setPrinterObjectList (state, payload) {
@@ -32,43 +38,46 @@ export const mutations: MutationTree<PrinterState> = {
   },
 
   setClearEndStops (state) {
-    state.printer.endstops = {}
+    if (state.printer.query_endstops == null) {
+      return
+    }
+
+    state.printer.query_endstops = {
+      ...state.printer.query_endstops,
+      last_query: {}
+    }
   },
 
   setClearScrewsTiltAdjust (state) {
-    state.printer.screws_tilt_adjust = {}
+    if (state.printer.screws_tilt_adjust == null) {
+      return
+    }
+
+    state.printer.screws_tilt_adjust = {
+      ...state.printer.screws_tilt_adjust,
+      error: false,
+      max_deviation: null,
+      results: {}
+    }
   },
 
-  setResetCurrentFile (state) {
-    const newState = defaultState().printer.current_file
-    consola.debug('resetting current file', newState)
-    Vue.set(state.printer, 'current_file', newState)
-  },
+  setSocketNotify<T extends keyof KlipperPrinterState> (state: PrinterState, payload: { key: T, payload: KlipperPrinterState[T] }) {
+    const { key: payloadKey, payload: payloadValue } = payload
 
-  setSocketNotify (state, payload) {
-    if (typeof payload.payload === 'object') {
-      const o = get(state.printer, payload.key)
-      if (o === undefined) {
-        // Object is not set yet, so create it.
-        Vue.set(state.printer, payload.key, payload.payload)
-      } else {
-        Object.keys(payload.payload).forEach((p) => {
-          // Leaving the if here, although it should
-          // always evaluate true since we never
-          // get an update unless something has changed.
-          if (
-            o[p] !== payload.payload[p]
-          ) {
-            Vue.set(state.printer[payload.key], p, payload.payload[p])
-          }
-        })
-      }
+    const stateObject = state.printer[payloadKey]
+
+    if (stateObject == null) {
+      // Object is not set yet, so create it.
+      Vue.set(state.printer, payloadKey, payloadValue)
     } else {
-      // I don't think this'd get called.
-      if (get(state.printer, payload.key) !== payload.payload) {
-        Vue.set(state.printer, payload.key, payload.payload)
+      for (const key in payloadValue) {
+        // Leaving the if here, although it should
+        // always evaluate true since we never
+        // get an update unless something has changed.
+        if (stateObject[key] !== payloadValue[key]) {
+          Vue.set(stateObject, key, payloadValue[key])
+        }
       }
     }
   }
-
-}
+} satisfies MutationTree<PrinterState>

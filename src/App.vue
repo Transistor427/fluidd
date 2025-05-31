@@ -1,7 +1,5 @@
 <template>
-  <v-app v-if="loading" />
   <v-app
-    v-else
     class="fluidd"
     :class="{ 'no-pointer-events': dragState }"
   >
@@ -28,7 +26,7 @@
     />
 
     <v-btn
-      v-if="isMobileViewport && authenticated && socketConnected"
+      v-if="isMobileViewport && socketConnected && authenticated"
       x-small
       fab
       fixed
@@ -43,7 +41,6 @@
     </v-btn>
 
     <v-main :style="customBackgroundImageStyle">
-      <!-- <pre>authenticated {{ authenticated }}, socketConnected {{ socketConnected }}, apiConnected {{ apiConnected }}</pre> -->
       <v-container
         fluid
         :class="{
@@ -57,7 +54,7 @@
             (socketConnected && apiConnected) &&
               (!klippyReady || hasWarnings) &&
               !inLayout &&
-              $route.path !== '/login'
+              $route.name !== 'login'
           "
         >
           <v-col>
@@ -81,11 +78,18 @@
             (!socketConnected && authenticated)"
       />
 
-      <file-system-download-dialog />
-      <updating-dialog />
-      <spool-selection-dialog />
-      <action-command-prompt-dialog />
-      <keyboard-shortcuts-dialog />
+      <template v-if="socketConnected">
+        <file-system-download-dialog />
+        <file-system-upload-dialog />
+        <updating-dialog />
+        <spool-selection-dialog />
+        <action-command-prompt-dialog />
+        <keyboard-shortcuts-dialog />
+        <manual-probe-dialog />
+        <bed-screws-adjust-dialog />
+        <screws-tilt-adjust-dialog />
+        <mmu-edit-ttg-map-dialog />
+      </template>
     </v-main>
 
     <app-footer />
@@ -106,13 +110,15 @@ import FilesMixin from '@/mixins/files'
 import BrowserMixin from '@/mixins/browser'
 import type { LinkPropertyHref, MetaPropertyName } from 'vue-meta'
 import FileSystemDownloadDialog from '@/components/widgets/filesystem/FileSystemDownloadDialog.vue'
+import FileSystemUploadDialog from '@/components/widgets/filesystem/FileSystemUploadDialog.vue'
 import SpoolSelectionDialog from '@/components/widgets/spoolman/SpoolSelectionDialog.vue'
 import type { FlashMessage } from '@/types'
-import { getFilesFromDataTransfer, hasFilesInDataTransfer } from './util/file-system-entry'
+import { getFilesFromDataTransfer, hasFilesInDataTransfer } from '@/util/file-system-entry'
 import type { ThemeConfig } from '@/store/config/types'
-import ActionCommandPromptDialog from './components/common/ActionCommandPromptDialog.vue'
-import KeyboardShortcutsDialog from './components/common/KeyboardShortcutsDialog.vue'
-import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from './util/event-helpers'
+import ActionCommandPromptDialog from '@/components/common/ActionCommandPromptDialog.vue'
+import KeyboardShortcutsDialog from '@/components/common/KeyboardShortcutsDialog.vue'
+import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from '@/util/event-helpers'
+import MmuEditTtgMapDialog from './components/widgets/mmu/MmuEditTtgMapDialog.vue'
 
 @Component<App>({
   metaInfo () {
@@ -125,8 +131,10 @@ import { eventTargetIsContentEditable, keyboardEventToKeyboardShortcut } from '.
   components: {
     SpoolSelectionDialog,
     FileSystemDownloadDialog,
+    FileSystemUploadDialog,
     ActionCommandPromptDialog,
-    KeyboardShortcutsDialog
+    KeyboardShortcutsDialog,
+    MmuEditTtgMapDialog
   }
 })
 export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
@@ -142,7 +150,7 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
   }
 
   get theme (): ThemeConfig {
-    return this.$store.state.config.uiSettings.theme as ThemeConfig
+    return this.$typedState.config.uiSettings.theme
   }
 
   get showBackgroundLogo () {
@@ -163,34 +171,30 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
 
   // Our app is in a loading state when the socket isn't quite ready, or
   // our translations are loading.
-  get updating () {
-    return this.$store.state.version.busy
+  get updating (): boolean {
+    return this.$typedState.version.status?.busy ?? false
   }
 
   get inLayout (): boolean {
-    return (this.$store.state.config.layoutMode)
+    return (this.$typedState.config.layoutMode)
   }
 
   get columnCount (): number {
-    return this.$store.state.config.containerColumnCount as number
+    return this.$typedState.config.containerColumnCount
   }
 
   get fileDropRoot () {
     return this.$route.meta?.fileDropRoot
   }
 
-  get loading () {
-    return this.hasWait(this.$waits.onLoadLanguage)
-  }
-
   get progress (): number {
-    const progress = this.$store.getters['printer/getPrintProgress'] as number
+    const progress: number = this.$typedGetters['printer/getPrintProgress']
     return Math.floor(progress * 100)
   }
 
   get pageTitle () {
-    const instanceName = this.$store.state.config.uiSettings.general.instanceName || ''
-    const pageName = this.$route.name
+    const instanceName: string = this.$typedState.config.uiSettings.general.instanceName || ''
+    const pageName = this.$t(`app.general.title.${this.$route.name}`)
 
     if (this.printerPrinting) {
       return `[${this.progress}%] | ${instanceName} | ${pageName}`
@@ -231,37 +235,40 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
     if (this.printerPrinting) {
       const favIconSize = 64
       const primaryColor = this.primaryColor
-      const secondaryColor = 'rgba(255, 255, 255, 0.10)'
+      const secondaryColor = 'rgba(128, 128, 128, 0.3)'
       const canvas = document.createElement('canvas')
-      const context = canvas.getContext('2d') as CanvasRenderingContext2D
-      canvas.width = favIconSize
-      canvas.height = favIconSize
-      const percent = this.progress
-      const centerX = canvas.width / 2
-      const centerY = canvas.height / 2
-      const lineWidth = 8
-      const radius = favIconSize / 2 - lineWidth / 2
-      const startAngle = 1.5 * Math.PI
-      const endAngle = startAngle + (percent * 2 * Math.PI / 100)
+      const context = canvas.getContext('2d')
 
-      /* Draw the initial gray circle */
-      context.moveTo(centerX, centerY)
-      context.beginPath()
-      context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false)
-      context.strokeStyle = secondaryColor
-      context.lineWidth = lineWidth
-      context.stroke()
-      context.closePath()
+      if (context) {
+        canvas.width = favIconSize
+        canvas.height = favIconSize
+        const percent = this.progress
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
+        const lineWidth = 10
+        const radius = favIconSize / 2 - lineWidth / 2
+        const startAngle = 1.5 * Math.PI
+        const endAngle = startAngle + (percent * 2 * Math.PI / 100)
 
-      /* Now draw the progress circle */
-      context.moveTo(centerX, centerY)
-      context.beginPath()
-      context.arc(centerX, centerY, radius, startAngle, endAngle, false)
-      context.strokeStyle = primaryColor
-      context.lineWidth = lineWidth
-      context.stroke()
+        /* Draw the initial gray circle */
+        context.moveTo(centerX, centerY)
+        context.beginPath()
+        context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false)
+        context.strokeStyle = secondaryColor
+        context.lineWidth = lineWidth
+        context.stroke()
+        context.closePath()
 
-      return canvas.toDataURL('image/png')
+        /* Now draw the progress circle */
+        context.moveTo(centerX, centerY)
+        context.beginPath()
+        context.arc(centerX, centerY, radius, startAngle, endAngle, false)
+        context.strokeStyle = primaryColor
+        context.lineWidth = lineWidth
+        context.stroke()
+
+        return canvas.toDataURL('image/png')
+      }
     }
   }
 
@@ -271,12 +278,12 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
     return `data:image/svg+xml;base64,${btoa(logoWithColor)}`
   }
 
-  get customStyleSheet () {
-    return this.$store.getters['config/getCustomThemeFile']('custom', ['.css'])
+  get customStyleSheet (): string | undefined {
+    return this.$typedGetters['config/getCustomThemeFile']('custom', ['.css'])
   }
 
   @Watch('customStyleSheet')
-  async onCustomStyleSheet (value: string) {
+  async onCustomStyleSheet (value: string | undefined) {
     if (!value) {
       return
     }
@@ -300,12 +307,12 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
     document.head.appendChild(linkElement)
   }
 
-  get customBackgroundImage () {
-    return this.$store.getters['config/getCustomThemeFile']('background', ['.png', '.jpg', '.jpeg', '.gif'])
+  get customBackgroundImage (): string | undefined {
+    return this.$typedGetters['config/getCustomThemeFile']('background', ['.png', '.jpg', '.jpeg', '.gif'])
   }
 
   @Watch('customBackgroundImage')
-  async onCustomBackgroundImage (value: string) {
+  async onCustomBackgroundImage (value: string | undefined) {
     if (!value) {
       return
     }
@@ -321,12 +328,12 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
   }
 
   get enableKeyboardShortcuts (): boolean {
-    return this.$store.state.config.uiSettings.general.enableKeyboardShortcuts
+    return this.$typedState.config.uiSettings.general.enableKeyboardShortcuts
   }
 
   mounted () {
     window.addEventListener('dragover', this.handleDragOver)
-    window.addEventListener('dragenter', this.handleDragEnter)
+    window.addEventListener('dragenter', this.handleDragOver)
     window.addEventListener('dragleave', this.handleDragLeave)
     window.addEventListener('drop', this.handleDrop)
     window.addEventListener('keydown', this.handleKeyDown, false)
@@ -359,7 +366,7 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
 
   beforeDestroy () {
     window.removeEventListener('dragover', this.handleDragOver)
-    window.removeEventListener('dragenter', this.handleDragEnter)
+    window.removeEventListener('dragenter', this.handleDragOver)
     window.removeEventListener('dragleave', this.handleDragLeave)
     window.removeEventListener('drop', this.handleDrop)
     window.removeEventListener('keydown', this.handleKeyDown)
@@ -375,6 +382,8 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
 
   handleDragOver (event: DragEvent) {
     if (
+      this.socketConnected &&
+      this.authenticated &&
       this.fileDropRoot &&
       event.dataTransfer &&
       hasFilesInDataTransfer(event.dataTransfer)
@@ -384,12 +393,6 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
       this.dragState = true
 
       event.dataTransfer.dropEffect = 'copy'
-    }
-  }
-
-  handleDragEnter (event: DragEvent) {
-    if (this.fileDropRoot) {
-      event.preventDefault()
     }
   }
 
@@ -418,18 +421,18 @@ export default class App extends Mixins(StateMixin, FilesMixin, BrowserMixin) {
         const files = await getFilesFromDataTransfer(event.dataTransfer)
 
         if (files) {
-          const pathWithRoot = this.$store.getters['files/getCurrentPathByRoot'](root) as string || ''
+          const pathWithRoot: string = this.$typedGetters['files/getCurrentPathByRoot'](root)
           const path = pathWithRoot === root
             ? ''
             : pathWithRoot.substring(root.length + 1)
 
           const wait = `${this.$waits.onFileSystem}/${pathWithRoot}/`
 
-          this.$store.dispatch('wait/addWait', wait)
+          this.$typedDispatch('wait/addWait', wait)
 
           await this.uploadFiles(files, path, root, false)
 
-          this.$store.dispatch('wait/removeWait', wait)
+          this.$typedDispatch('wait/removeWait', wait)
         }
       }
     }

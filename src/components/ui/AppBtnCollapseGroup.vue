@@ -1,7 +1,7 @@
 <template v-if="hasDefaultSlot">
   <!-- not collapsed -->
   <div
-    v-if="!isCollapsed"
+    v-if="!collapsed"
     class="d-inline-block"
   >
     <slot />
@@ -18,17 +18,14 @@
   >
     <template #activator="{ on, attrs }">
       <app-btn
-        fab
-        :x-small="size === 'x-small'"
-        :small="size === 'small'"
+        icon
         :disabled="disabled"
-        text
-        color=""
         v-bind="attrs"
-        class="ms-1 my-1"
         v-on="on"
       >
-        <v-icon>{{ menuIcon }}</v-icon>
+        <v-icon dense>
+          {{ menuIcon }}
+        </v-icon>
       </app-btn>
     </template>
     <v-sheet
@@ -43,7 +40,9 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppBtnCollapseGroup extends Vue {
   @Prop({ type: Boolean })
   readonly collapsed?: boolean
@@ -51,25 +50,11 @@ export default class AppBtnCollapseGroup extends Vue {
   @Prop({ type: String, default: '$menu' })
   readonly menuIcon!: string
 
-  @Prop({ type: String, default: 'x-small' })
-  readonly size!: string
-
   @Prop({ type: Boolean })
   readonly disabled?: boolean
-
-  get isCollapsed () {
-    if (this.collapsed) return true
-    return this.$vuetify.breakpoint.mdAndDown
-  }
 
   get hasDefaultSlot () {
     return !!this.$slots.default
   }
 }
 </script>
-
-<style lang="scss" scoped>
-  .handle {
-    cursor: pointer;
-  }
-</style>

@@ -1,11 +1,11 @@
 <template>
   <v-row
     no-gutters
-    v-bind="$attrs"
     :class="{
       'sc-link': hasClick
     }"
     class="app-setting-control"
+    v-bind="$attrs"
     v-on="$listeners"
   >
     <div
@@ -49,7 +49,9 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppSetting extends Vue {
   @Prop({ type: String, default: '' })
   readonly title!: string

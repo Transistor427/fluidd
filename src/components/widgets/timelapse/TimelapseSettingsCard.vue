@@ -2,7 +2,6 @@
   <collapsable-card
     :title="$t('app.timelapse.title.timelapse_settings')"
     icon="$cog"
-    class=""
   >
     <app-setting
       :title="$t('app.timelapse.setting.enable')"
@@ -54,13 +53,13 @@
 <script lang="ts">
 import { Component, Mixins } from 'vue-property-decorator'
 import StateMixin from '@/mixins/state'
-import type { TimelapseSettings } from '@/store/timelapse/types'
+import type { TimelapseLastFrame, TimelapseSettings } from '@/store/timelapse/types'
 import { SocketActions } from '@/api/socketActions'
 
 @Component({})
 export default class TimelapseSettingsCard extends Mixins(StateMixin) {
-  get enabledBlocked () {
-    return this.$store.getters['timelapse/isBlockedSetting']('enabled')
+  get enabledBlocked (): boolean {
+    return this.$typedGetters['timelapse/isBlockedSetting']('enabled')
   }
 
   get enabled () {
@@ -71,8 +70,8 @@ export default class TimelapseSettingsCard extends Mixins(StateMixin) {
     SocketActions.machineTimelapseSetSettings({ enabled: value })
   }
 
-  get autoRenderBlocked () {
-    return this.$store.getters['timelapse/isBlockedSetting']('autorender')
+  get autoRenderBlocked (): boolean {
+    return this.$typedGetters['timelapse/isBlockedSetting']('autorender')
   }
 
   get autoRender () {
@@ -84,11 +83,13 @@ export default class TimelapseSettingsCard extends Mixins(StateMixin) {
   }
 
   get frameCount () {
-    return this.$store.getters['timelapse/getLastFrame']?.count
+    const lastFrame: TimelapseLastFrame | undefined = this.$typedState.timelapse.lastFrame
+
+    return lastFrame?.count
   }
 
   get settings (): TimelapseSettings {
-    return this.$store.getters['timelapse/getSettings']
+    return this.$typedState.timelapse.settings ?? {} as TimelapseSettings
   }
 
   subtitleIfBlocked (blocked: boolean): string {

@@ -8,7 +8,7 @@
     layout-path="dashboard.temperature-card"
   >
     <template #menu>
-      <app-btn-collapse-group :collapsed="menuCollapsed">
+      <app-btn-collapse-group :collapsed="narrow">
         <temperature-presets-menu
           @applyOff="handleApplyOff"
           @applyPreset="handleApplyPreset"
@@ -23,18 +23,15 @@
         :close-on-content-click="false"
       >
         <template #activator="{ on, attrs }">
-          <v-btn
-            fab
-            x-small
-            text
+          <app-btn
+            icon
             v-bind="attrs"
-            class="ms-1 my-1"
             v-on="on"
           >
-            <v-icon>
+            <v-icon dense>
               $cog
             </v-icon>
-          </v-btn>
+          </app-btn>
         </template>
 
         <v-list dense>
@@ -97,8 +94,7 @@
     </template>
 
     <temperature-targets
-      @legendClick="legendToggleSelect"
-      @legendPowerClick="legendTogglePowerSelect"
+      @updateChartSelectedLegends="updateChartSelectedLegends"
     />
 
     <template v-if="chartReady && chartVisible">
@@ -106,7 +102,7 @@
 
       <thermal-chart
         ref="thermalchart"
-        :height="(isMobileViewport) ? '180px' : '260px'"
+        :narrow="narrow"
       />
     </template>
   </collapsable-card>
@@ -116,12 +112,13 @@
 import { Component, Mixins, Prop, Ref } from 'vue-property-decorator'
 import StateMixin from '@/mixins/state'
 import BrowserMixin from '@/mixins/browser'
-import type { Fan, Heater } from '@/store/printer/types'
 
 import ThermalChart from '@/components/widgets/thermals/ThermalChart.vue'
 import TemperatureTargets from '@/components/widgets/thermals/TemperatureTargets.vue'
 import TemperaturePresetsMenu from './TemperaturePresetsMenu.vue'
 import type { TemperaturePreset } from '@/store/config/types'
+import type { ChartSelectedLegends } from '@/store/charts/types'
+import { encodeGcodeParamValue } from '@/util/gcode-helpers'
 
 @Component({
   components: {
@@ -132,93 +129,80 @@ import type { TemperaturePreset } from '@/store/config/types'
 })
 export default class TemperatureCard extends Mixins(StateMixin, BrowserMixin) {
   @Prop({ type: Boolean })
-  readonly menuCollapsed?: boolean
+  readonly narrow?: boolean
 
   @Ref('thermalchart')
   readonly thermalChartElement!: ThermalChart
 
-  get chartReady () {
+  get chartReady (): boolean {
     return (
-      this.$store.state.socket.acceptingNotifications &&
-      this.$store.state.socket.ready &&
-      this.$store.state.charts.ready &&
+      this.$typedState.socket.acceptingNotifications &&
+      this.$typedState.socket.ready &&
+      this.$typedState.charts.ready &&
       this.klippyReady
     )
   }
 
-  legendToggleSelect (item: Heater | Fan) {
-    // If this has a target, toggle that too.
+  updateChartSelectedLegends (chartSelectedLegends: ChartSelectedLegends) {
     if (this.chartVisible) {
-      if ('target' in item) {
-        this.thermalChartElement.legendToggleSelect(item.key + 'Target')
-      }
-      this.thermalChartElement.legendToggleSelect(item.key)
+      this.thermalChartElement.updateChartSelectedLegends(chartSelectedLegends)
     }
   }
 
-  legendTogglePowerSelect (item: Heater | Fan) {
-    if (this.chartVisible) {
-      const name = ('speed' in item)
-        ? item.key + 'Speed'
-        : item.key + 'Power'
-      this.thermalChartElement.legendToggleSelect(name)
-    }
-  }
-
-  get chartVisible () {
-    return this.$store.state.config.uiSettings.general.chartVisible
+  get chartVisible (): boolean {
+    return this.$typedState.config.uiSettings.general.chartVisible
   }
 
   set chartVisible (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.chartVisible',
       value,
       server: true
     })
   }
 
-  get showRateOfChange () {
-    return this.$store.state.config.uiSettings.general.showRateOfChange
+  get showRateOfChange (): boolean {
+    return this.$typedState.config.uiSettings.general.showRateOfChange
   }
 
   set showRateOfChange (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showRateOfChange',
       value,
       server: true
     })
   }
 
-  get showRelativeHumidity () {
-    return this.$store.state.config.uiSettings.general.showRelativeHumidity
+  get showRelativeHumidity (): boolean {
+    return this.$typedState.config.uiSettings.general.showRelativeHumidity
   }
 
   set showRelativeHumidity (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showRelativeHumidity',
       value,
       server: true
     })
   }
 
-  get showBarometricPressure () {
-    return this.$store.state.config.uiSettings.general.showBarometricPressure
+  get showBarometricPressure (): boolean {
+    return this.$typedState.config.uiSettings.general.showBarometricPressure
   }
 
   set showBarometricPressure (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showBarometricPressure',
       value,
       server: true
     })
   }
 
-  get showGasResistance () {
-    return this.$store.state.config.uiSettings.general.showGasResistance
+  get showGasResistance (): boolean {
+    return this.$typedState.config.uiSettings.general.showGasResistance
   }
 
   set showGasResistance (value: boolean) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.showGasResistance',
       value,
       server: true
@@ -231,10 +215,10 @@ export default class TemperatureCard extends Mixins(StateMixin, BrowserMixin) {
         for (const key in preset.values) {
           const item = preset.values[key]
           if (item.type === 'heater' && item.active && item.value > -1) {
-            this.sendGcode(`SET_HEATER_TEMPERATURE HEATER=${key} TARGET=${item.value}`)
+            this.sendGcode(`SET_HEATER_TEMPERATURE HEATER=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
           }
           if (item.type === 'fan' && item.active && item.value > -1) {
-            this.sendGcode(`SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN=${key} TARGET=${item.value}`)
+            this.sendGcode(`SET_TEMPERATURE_FAN_TARGET TEMPERATURE_FAN=${encodeGcodeParamValue(key)} TARGET=${item.value}`)
           }
         }
       }
@@ -247,7 +231,7 @@ export default class TemperatureCard extends Mixins(StateMixin, BrowserMixin) {
 
   async handleApplyOff () {
     const result = (
-      !['printing', 'busy', 'paused'].includes(this.$store.getters['printer/getPrinterState']) ||
+      !['printing', 'busy', 'paused'].includes(this.printerState) ||
       await this.$confirm(
         this.$tc('app.general.label.heaters_busy'),
         { title: this.$tc('app.general.simple_form.msg.confirm'), color: 'card-heading', icon: '$error' }

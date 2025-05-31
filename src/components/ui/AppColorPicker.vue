@@ -4,12 +4,14 @@
     left
     max-width="260"
     :close-on-content-click="false"
+    :disabled="disabled"
   >
     <template #activator="{ on, attrs }">
       <v-btn
         v-if="!dot"
         v-bind="attrs"
         :color="controlColor"
+        :disabled="disabled"
         outlined
         small
         v-on="on"
@@ -21,6 +23,7 @@
         v-else
         v-bind="attrs"
         :color="controlColor"
+        :disabled="disabled"
         v-on="on"
       >
         $circle
@@ -75,7 +78,7 @@
         </v-layout>
 
         <div class="text-right mt-4 mr-1">
-          <v-btn-toggle
+          <app-btn-toggle
             v-model="valueRange"
             mandatory
           >
@@ -91,7 +94,7 @@
             >
               0..1
             </app-btn>
-          </v-btn-toggle>
+          </app-btn-toggle>
         </div>
 
         <v-layout
@@ -107,6 +110,7 @@
               dense
               hide-details
               outlined
+              persistent-placeholder
               @blur="handleReset"
               @keyup.enter.exact="handleSubmitPrimary"
             />
@@ -121,6 +125,7 @@
               dense
               hide-details
               outlined
+              persistent-placeholder
               @blur="handleReset"
               @keyup.enter.exact="handleSubmitPrimary"
             />
@@ -135,6 +140,7 @@
               dense
               hide-details
               outlined
+              persistent-placeholder
               @blur="handleReset"
               @keyup.enter.exact="handleSubmitPrimary"
             />
@@ -149,6 +155,7 @@
               dense
               hide-details
               outlined
+              persistent-placeholder
               @blur="handleReset"
               @keyup.enter.exact="handleSubmitWhite"
             />
@@ -175,10 +182,10 @@ interface PointerPosition {
 @Component({})
 export default class AppColorPicker extends Vue {
   @VModel({ type: String, required: true })
-    inputPrimaryColor!: string
+  inputPrimaryColor!: string
 
   @PropSync('white', { type: Number, default: 0 })
-    inputWhiteValue!: number
+  inputWhiteValue!: number
 
   @Prop({ type: String, default: '' })
   readonly title!: string
@@ -188,6 +195,9 @@ export default class AppColorPicker extends Vue {
 
   @Prop({ type: String, default: 'RGB' })
   readonly supportedChannels!: string
+
+  @Prop({ type: Boolean })
+  readonly disabled?: boolean
 
   @Ref('card')
   readonly card!: Vue
@@ -290,11 +300,11 @@ export default class AppColorPicker extends Vue {
   }
 
   get valueRange (): ColorPickerValueRange {
-    return this.$store.state.config.uiSettings.general.colorPickerValueRange
+    return this.$typedState.config.uiSettings.general.colorPickerValueRange
   }
 
   set valueRange (value: ColorPickerValueRange) {
-    this.$store.dispatch('config/saveByPath', {
+    this.$typedDispatch('config/saveByPath', {
       path: 'uiSettings.general.colorPickerValueRange',
       value,
       server: true

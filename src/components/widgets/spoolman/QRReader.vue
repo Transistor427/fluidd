@@ -30,6 +30,7 @@ import QrScanner from 'qr-scanner'
 import CameraItem from '@/components/widgets/camera/CameraItem.vue'
 import type { Spool } from '@/store/spoolman/types'
 import BrowserMixin from '@/mixins/browser'
+import type { WebcamConfig } from '@/store/webcams/types'
 
 @Component({
   components: { CameraItem }
@@ -43,15 +44,15 @@ export default class QRReader extends Mixins(StateMixin, BrowserMixin) {
   statusMessage = 'info.howto'
   lastScanTimestamp = Date.now()
   processing = false
-  context!: CanvasRenderingContext2D
+  context: CanvasRenderingContext2D | null = null
 
   @VModel({ type: String, default: null })
-    source!: null | string
+  source!: null | string
 
   @Ref('canvas')
-    canvas!: HTMLCanvasElement
+  canvas!: HTMLCanvasElement
 
-  get camera () {
+  get camera (): WebcamConfig | { name: string, service: 'device' } | undefined {
     if (this.source === 'device') {
       return {
         name: this.$t('app.spoolman.label.device_camera').toString(),
@@ -59,7 +60,9 @@ export default class QRReader extends Mixins(StateMixin, BrowserMixin) {
       }
     }
 
-    return this.$store.getters['webcams/getWebcamById'](this.source)
+    if (this.source !== null) {
+      return this.$typedGetters['webcams/getWebcamById'](this.source)
+    }
   }
 
   get open () {
@@ -74,7 +77,10 @@ export default class QRReader extends Mixins(StateMixin, BrowserMixin) {
 
   async mounted () {
     this.processing = true
-    this.context = this.canvas.getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D
+    this.context = this.canvas.getContext('2d', { willReadFrequently: true })
+    if (this.context === null) {
+      this.statusMessage = 'error.no_image_data'
+    }
     this.processing = false
   }
 
@@ -107,9 +113,11 @@ export default class QRReader extends Mixins(StateMixin, BrowserMixin) {
     }
 
     try {
-      this.context.drawImage(image, 0, 0, this.canvas.width, this.canvas.height)
-      const result = await QrScanner.scanImage(this.canvas, { returnDetailedScanResult: true })
-      if (result.data) { this.handleCodeFound(result.data) }
+      if (this.context) {
+        this.context.drawImage(image, 0, 0, this.canvas.width, this.canvas.height)
+        const result = await QrScanner.scanImage(this.canvas, { returnDetailedScanResult: true })
+        if (result.data) { this.handleCodeFound(result.data) }
+      }
     } catch (err) {
       if (err instanceof DOMException) {
         if (err.name === 'SecurityError') {
@@ -124,8 +132,8 @@ export default class QRReader extends Mixins(StateMixin, BrowserMixin) {
     this.processing = false
   }
 
-  get availableSpools () {
-    return this.$store.getters['spoolman/getAvailableSpools']
+  get availableSpools (): Spool[] {
+    return this.$typedGetters['spoolman/getAvailableSpools']
   }
 
   handleCodeFound (code: string) {

@@ -25,20 +25,19 @@
 <script lang="ts">
 import { Component, Vue, VModel, Prop } from 'vue-property-decorator'
 import type { QueuedJob } from '@/store/jobQueue/types'
-import { isArray } from 'lodash-es'
 
 @Component({})
 export default class JobQueueMultiplyJobDialog extends Vue {
   copies = 1
 
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: [Object, Array], required: true })
   readonly job!: QueuedJob | QueuedJob[]
 
   get jobCount () {
-    return isArray(this.job)
+    return Array.isArray(this.job)
       ? this.job.length
       : 1
   }

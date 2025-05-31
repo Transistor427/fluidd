@@ -1,9 +1,9 @@
 <template>
   <v-overlay
-    v-bind="$attrs"
     class="dragOverlay"
-    :value="value"
     :opacity="0.85"
+    v-bind="$attrs"
+    v-on="$listeners"
   >
     <v-container>
       <v-row
@@ -33,11 +33,10 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-@Component({})
+@Component({
+  inheritAttrs: false
+})
 export default class AppDragOverlay extends Vue {
-  @Prop({ type: Boolean })
-  readonly value?: boolean
-
   @Prop({ type: String, required: true })
   readonly message!: string
 
@@ -49,6 +48,7 @@ export default class AppDragOverlay extends Vue {
 <style lang="scss" scoped>
   .dragOverlay.v-overlay--active {
     border: dashed 3px #616161;
+    pointer-events: none !important;
   }
 
   .dragOverlay :deep(.v-overlay__content) {

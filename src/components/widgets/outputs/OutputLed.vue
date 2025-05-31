@@ -6,16 +6,18 @@
     <v-col
       align-self="center"
       cols="5"
-      class="text-body-1 py-0"
+      class="text-body-1"
+      :class="{ 'text--disabled': !klippyReady }"
     >
       {{ led.prettyName }}
     </v-col>
-    <v-col class="ml-auto py-0 text-right">
+    <v-col class="ml-auto text-right">
       <app-color-picker
         v-model="primaryColor"
         :white.sync="whiteValue"
         :title="led.prettyName"
         :supported-channels="supportedChannels"
+        :disabled="!klippyReady"
         dot
       />
     </v-col>
@@ -27,6 +29,7 @@ import { Component, Mixins, Prop } from 'vue-property-decorator'
 import { IroColor } from '@irojs/iro-core'
 import StateMixin from '@/mixins/state'
 import type { Led } from '@/store/printer/types'
+import { encodeGcodeParamValue } from '@/util/gcode-helpers'
 
 type Rgbw = {
   r: number,
@@ -50,23 +53,31 @@ export default class OutputLed extends Mixins(StateMixin) {
   get supportedChannels (): string {
     const { type, config } = this.led
 
-    if ('color_order' in config) {
-      return config.color_order[0]
-    }
+    if (config) {
+      if ('color_order' in config) {
+        const colorOrder = Array.isArray(config.color_order)
+          ? config.color_order[0]
+          : config.color_order
 
-    switch (type) {
-      case 'dotstar':
-        return 'RGB'
+        if (typeof colorOrder === 'string') {
+          return colorOrder
+        }
+      }
 
-      case 'led': {
-        const channels = []
+      switch (type) {
+        case 'dotstar':
+          return 'RGB'
 
-        if ('red_pin' in config) channels.push('R')
-        if ('green_pin' in config) channels.push('G')
-        if ('blue_pin' in config) channels.push('B')
-        if ('white_pin' in config) channels.push('W')
+        case 'led': {
+          const channels = []
 
-        return channels.join('')
+          if ('red_pin' in config) channels.push('R')
+          if ('green_pin' in config) channels.push('G')
+          if ('blue_pin' in config) channels.push('B')
+          if ('white_pin' in config) channels.push('W')
+
+          return channels.join('')
+        }
       }
     }
 
@@ -124,7 +135,7 @@ export default class OutputLed extends Mixins(StateMixin) {
       .map(channel => ` ${this.channelLookup[channel]}=${Math.round(color[channel] * 1000 / 255) / 1000}`)
       .join('')
 
-    this.sendGcode(`SET_LED LED=${this.led.name}${colorsString}`)
+    this.sendGcode(`SET_LED LED=${encodeGcodeParamValue(this.led.name)}${colorsString}`)
   }
 }
 </script>

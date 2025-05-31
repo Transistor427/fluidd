@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import Vuex from 'vuex'
+import Vuex, { type StoreOptions } from 'vuex'
 import { consola } from 'consola'
-import type { RootState } from './types'
+import type { RootModules, RootState } from './types'
 import type { InitConfig } from './config/types'
 
 // Modules
@@ -24,15 +24,16 @@ import { announcements } from './announcements'
 import { wait } from './wait'
 import { gcodePreview } from './gcodePreview'
 import { timelapse } from './timelapse'
-import { parts } from './parts'
 import { webcams } from './webcams'
 import { jobQueue } from './jobQueue'
 import { spoolman } from './spoolman'
+import { mmu } from './mmu'
 import { sensors } from './sensors'
+import { analysis } from './analysis'
 
 Vue.use(Vuex)
 
-export default new Vuex.Store<RootState>({
+export const storeOptions = {
   strict: (import.meta.env.DEV),
   modules: {
     socket,
@@ -54,12 +55,13 @@ export default new Vuex.Store<RootState>({
     wait,
     gcodePreview,
     timelapse,
-    parts,
     webcams,
     jobQueue,
     spoolman,
-    sensors
-  },
+    mmu,
+    sensors,
+    analysis
+  } satisfies RootModules,
   mutations: {},
   actions: {
     /**
@@ -77,22 +79,33 @@ export default new Vuex.Store<RootState>({
           p.push(dispatch(key + '/reset'))
         }
       })
-      return Promise.all(p)
+      await Promise.all(p)
     },
 
     async init ({ dispatch, commit }, payload: InitConfig) {
-      // Sets the version and hash of Fluidd.
-      commit('version/setVersion', import.meta.env.VERSION)
-      commit('version/setHash', import.meta.env.HASH)
-
       // Set the api connection state..
       commit('socket/setApiConnected', payload.apiConnected)
 
       // Init the host and local configs..
-      return [
-        await dispatch('config/initHost', payload),
-        await dispatch('config/initLocal', payload)
-      ]
+      await Promise.all([
+        dispatch('config/initHost', payload),
+        dispatch('config/initLocal', payload)
+      ])
+
+      commit('config/setAppReady', true)
+    },
+
+    async resetKlippy ({ dispatch, commit }) {
+      commit('socket/setAcceptNotifications', false)
+
+      await Promise.all([
+        dispatch('server/resetKlippy'),
+        dispatch('charts/resetChartStore'),
+        dispatch('reset', [
+          'printer',
+          'wait'
+        ])
+      ])
     },
 
     /**
@@ -102,4 +115,6 @@ export default new Vuex.Store<RootState>({
       consola.debug('void action', payload)
     }
   }
-})
+} satisfies StoreOptions<RootState>
+
+export default new Vuex.Store<RootState>(storeOptions)

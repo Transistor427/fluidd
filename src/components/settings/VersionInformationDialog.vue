@@ -51,7 +51,7 @@
                     >
                       <strong>{{ commit.author }}</strong>
                     </a>
-                    {{ $t('app.version.label.committed') }} {{ $filters.formatRelativeTimeToNow(commit.date * 1000) }}
+                    {{ $t('app.version.label.committed') }} {{ $filters.formatRelativeTimeToNow(+commit.date * 1000) }}
                   </div>
                 </div>
                 <div>
@@ -91,28 +91,28 @@
 </template>
 
 <script lang="ts">
-import type { UpdatePackage } from '@/store/version/types'
+import type { VersionInfo } from '@/store/version/types'
 import { Component, Vue, Prop, VModel } from 'vue-property-decorator'
 
 @Component({})
 export default class VersionInformationDialog extends Vue {
   @VModel({ type: Boolean })
-    open?: boolean
+  open?: boolean
 
   @Prop({ type: Object })
-  readonly component!: UpdatePackage
+  readonly component!: VersionInfo
 
   // For HashVersions or ArtifacVersions, show the commit history.
   // For type system, show the packages available to update.
   // For type client, just show the release notes if we can.
 
   get commitHistory () {
-    return this.$store.getters['version/getCommitHistory'](this.component.key)
+    return this.$typedGetters['version/getCommitHistory'](this.component.name)
   }
 
   get baseUrl () {
     if ('owner' in this.component) {
-      return `https://github.com/${this.component.owner}/${this.component.repo_name || this.component.key}`
+      return `https://github.com/${this.component.owner}/${this.component.repo_name || this.component.name}`
     }
     return ''
   }
